@@ -1,0 +1,9 @@
+.env
+.env.*
+!.env.example
+data/
+certs/
+backups/
+captures/
+__pycache__/
+
