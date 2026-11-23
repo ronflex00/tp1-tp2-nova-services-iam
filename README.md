@@ -1,16 +1,17 @@
-# Nova Services — IAM Lab
+# Nova Services — IAM Laboratory
 
 ## Objectif
 
 Installer puis faire évoluer un laboratoire IAM Nova Services avec Docker Compose, secrets locaux, persistance et contrôles de santé. Gitea n'est pas retenu.
 
-## TP1 — Infrastructure
+## TP1 — Infrastructure IAM
 
 - Docker Compose
 - PostgreSQL
 - Authentik Server et Worker
 - Grafana
 - persistance
+- healthchecks
 
 ## TP2 — Identity & Access Management
 
@@ -19,6 +20,10 @@ Installer puis faire évoluer un laboratoire IAM Nova Services avec Docker Compo
 - MFA TOTP et récupération
 - SSO OIDC vers Grafana
 - mapping des rôles et deprovisioning
+- provisioning utilisateurs
+- cycle de vie
+- équipes Grafana
+- permissions de dossiers
 
 ## Architecture
 
@@ -107,4 +112,20 @@ Ne pas utiliser `docker compose down -v` sauf si l'on souhaite réellement suppr
 ## Préparation du TP2
 
 Le TP2 ajoute la relation `Authentik` → `OAuth2 / OIDC` → `Grafana`. Suivre les procédures dans `docs/comptes.md`, `docs/rbac.md`, `docs/oidc.md` et `docs/tests.md`. Le SSO n'est activé dans Compose qu'après création manuelle du provider et validation de la découverte OIDC.
+
+## Automatisation navigateur TP2
+
+Playwright utilise uniquement Chromium, une viewport `1440x900` et un contexte isolé par utilisateur. Les identifiants et le MFA restent saisis manuellement dans la fenêtre Chromium ; aucun secret, QR code ou cookie n'est capturé.
+
+```bash
+npm run test:e2e -- --headed
+```
+
+La suite capture les preuves qui peuvent être validées automatiquement et indique `SKIPPED` ou `BLOCKED` pour les contrôles nécessitant une action humaine. Les mutations de groupes sont désactivées par défaut :
+
+```bash
+TP2_RUN_MUTATIONS=1 npm run test:e2e -- --headed
+```
+
+Le déprovisionnement de Bob est une action séparée et destructive ; il ne s'exécute qu'avec `TP2_RUN_DEPROVISION=1` en plus de `TP2_RUN_MUTATIONS=1`. Les captures sont écrites dans `captures/tp2/`, les états temporaires dans `.tmp/playwright/`, puis supprimés en fin de test.
 

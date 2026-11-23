@@ -1,0 +1,9 @@
+{
+  "private": true,
+  "scripts": {
+    "test:e2e": "playwright test tests/e2e/tp2-rbac.spec.ts"
+  },
+  "devDependencies": {
+    "@playwright/test": "^1.65.1"
+  }
+}

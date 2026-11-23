@@ -1,28 +1,49 @@
 # RBAC Nova Services
 
-## Groupes et affectations
+## Matrice Authentik
 
-| Groupe | Utilisateur initial | Rôle Grafana cible |
+| Groupe Authentik | Membre initial | Rôle Grafana transmis |
 |---|---|---|
-| `Admin` | Charlie | Admin |
-| `Dev` | Bob | Editor |
-| `RH` | Alice | Viewer |
-| `Audit` | aucun | Viewer |
+| `Admin` | Charlie | `Admin` |
+| `Dev` | Bob | `Editor` |
+| `RH` | Alice | `Viewer` |
+| `Audit` | aucun | `Viewer` |
 
-Créer les groupes dans Authentik → Directory → Groups. `Admin` ne doit pas être Authentik Superuser : Admin Grafana et Superuser Authentik sont deux périmètres différents.
+État observé à la fin de la recette : Alice est dans `RH`, Bob dans `Dev`, Charlie dans `Admin` et `Audit` est vide.
 
-Affectations initiales : `alice → RH`, `bob → Dev`, `charlie → Admin`.
+`Admin` est un groupe métier Authentik et ne signifie pas Authentik Superuser. Le groupe Admin permet ici le binding de l'application Grafana ; il ne donne pas automatiquement les privilèges d'administration globale d'Authentik.
+
+## Matrice Grafana
+
+| Groupe OIDC `nova_groups` | Rôle Grafana |
+|---|---|
+| `Admin` | Admin d'organisation |
+| `Dev` | Editor |
+| `RH` | Viewer |
+| `Audit` | Viewer |
+
+Le rôle Admin Grafana est un rôle d'organisation. Il est différent de `GrafanaAdmin`, qui est un rôle serveur global. Le rôle Editor est large au niveau organisation et ne suffit pas, à lui seul, à restreindre automatiquement un utilisateur au dossier Dev.
+
+## Équipes et dossiers
+
+| Équipe | Dossier | Permission directe |
+|---|---|---|
+| `nova-dev` | `Dev` | Edit |
+| `nova-rh` | `RH` | View |
+
+Charlie conserve l'administration des objets Grafana de démonstration.
 
 ## Mobilité de Bob
 
-Pour le test, retirer temporairement Bob de `Dev`, l'ajouter à `Audit`, effectuer une nouvelle connexion OAuth et vérifier le rôle Viewer. Puis remettre Bob dans `Dev` et retirer `Audit`. Conserver simultanément plusieurs groupes peut augmenter les privilèges effectifs.
+Le scénario prévu retire temporairement Bob de `Dev`, l'ajoute à `Audit`, exige une nouvelle connexion OAuth et vérifie le rôle Viewer. La restauration retire Bob de `Audit` et le remet dans `Dev`. Ce scénario n'a pas été exécuté pendant la recette finale faute de jeton API Authentik présent dans l'environnement.
 
-## Mapping des groupes
+## Limite observée
 
-Property Mapping Authentik, type OAuth2/OpenID Scope Mapping :
+Le test navigateur a montré qu'Alice peut encore ouvrir directement le dashboard Dev malgré l'absence de son appartenance à `nova-dev`. Ce résultat est conservé comme `FAIL` dans `docs/tests.md` : aucune permission n'a été corrigée silencieusement pendant la phase de rendu.
 
-- Name : `nova-grafana-groups`
-- Scope name : `nova_groups`
+## Property Mapping
+
+Le scope mapping `nova-grafana-groups` expose uniquement les groupes autorisés :
 
 ```python
 allowed_groups = {"Admin", "Dev", "RH", "Audit"}
@@ -36,5 +57,4 @@ return {
 }
 ```
 
-Exemple fictif : `{"nova_groups": ["Admin"]}`. Aucun vrai token n'est enregistré.
-
+L'exemple est documentaire ; aucun token réel n'est enregistré.

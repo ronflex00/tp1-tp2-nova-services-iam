@@ -2,69 +2,92 @@
 
 ## 1. Contexte
 
-Nova Services poursuit le laboratoire TP1 PostgreSQL, Authentik et Grafana. Gitea n'est pas retenu.
+Nova Services complète le laboratoire TP1 avec la gestion des identités Authentik, le MFA, le RBAC et le SSO OIDC vers Grafana.
 
 ## 2. Architecture
 
-Authentik reste le fournisseur d'identité. Grafana délègue l'authentification via OIDC ; PostgreSQL reste interne à Authentik.
+Authentik est l'Identity Provider. Grafana est le client OIDC. PostgreSQL reste interne au réseau Docker `iam-network`.
 
-## 3. Gestion des identités
+```mermaid
+flowchart LR
+    U[Utilisateur] --> G[Grafana]
+    G -->|OIDC authorization| A[Authentik]
+    A -->|login + MFA| U
+    A -->|code / tokens / userinfo| G
+    A --> P[(PostgreSQL interne)]
+```
 
-Alice, Bob et Charlie existent avec les usernames `alice`, `bob` et `charlie`. Les noms affichés et emails sont conservés.
+## 3. Identités
+
+Alice (`alice`), Bob (`bob`) et Charlie (`charlie`) sont configurés dans Authentik. Les mots de passe ne sont pas documentés.
 
 ## 4. Attributs métier
 
-Les attributs `department`, `role` et `clearance_level` ont été vérifiés par API pour les trois comptes, sans modifier leurs groupes ni leur MFA.
+Les attributs `department`, `role` et `clearance_level` ont été vérifiés pour les trois comptes. Ils décrivent le métier et ne donnent pas automatiquement de privilège.
 
 ## 5. Cycle de vie
 
-Le scénario de suspension/réactivation de Bob est défini dans `docs/tests.md`.
+Le cycle de vie de Bob est préparé par scripts, mais le déprovisionnement n'a pas été exécuté pendant la recette finale. Bob est donc encore actif et membre de `Dev`.
 
 ## 6. RBAC
 
-Les groupes Admin, Dev, RH et Audit, leurs membres et la mobilité de Bob sont définis dans `docs/rbac.md`.
+| Groupe | Membre observé | Rôle Grafana |
+|---|---|---|
+| Admin | Charlie | Admin d'organisation |
+| Dev | Bob | Editor |
+| RH | Alice | Viewer |
+| Audit | aucun | Viewer si affecté |
 
 ## 7. MFA
 
-Enrôlement TOTP manuel et validation obligatoire à confirmer humainement.
+Les connexions navigateur de Charlie, Alice et Bob ont demandé une intervention MFA manuelle et ont abouti. Les scénarios de mauvais code et de compte sans facteur n'ont pas été exécutés.
 
-## 8. Procédure de récupération
+## 8. Recovery
 
-Voir `docs/recovery.md`.
+La récupération repose sur des Static Tokens contrôlés, la vérification d'identité, la révocation de l'ancien périphérique, la révocation des sessions et le réenrôlement TOTP. Aucun code réel n'est conservé.
 
-## 9. OIDC
+## 9. SSO / OIDC
 
-Provider `nova-grafana-oidc`, scope mapping `nova-grafana-groups` et application Grafana sont décrits dans `docs/oidc.md`.
+Le flux est : navigateur → Grafana → Authentik → login/MFA → authorization code → token endpoint → userinfo → `nova_groups` → rôle Grafana. Les URLs front-channel et back-channel sont documentées dans `docs/oidc.md`.
 
-## 10. Intégration Grafana
+## 10. Grafana
 
-Le provider `nova-grafana-oidc`, l'application `Grafana — Nova Services` et les bindings Admin/Dev/RH/Audit ont été créés via l'API Authentik. Grafana utilise désormais Generic OAuth avec PKCE, la découverte d'identifiants et les URLs front-channel/back-channel documentées.
+Le dashboard principal, les dashboards Dev/RH et les équipes `nova-dev`/`nova-rh` sont configurés. Les rôles API observés sont Alice Viewer, Bob Editor et Charlie Admin.
 
 ## 11. Mapping des rôles
 
-Admin → Admin, Dev → Editor, RH/Audit → Viewer.
+`Admin → Admin`, `Dev → Editor`, `RH → Viewer`, `Audit → Viewer`.
 
-## 12. Permissions de dossiers
+## 12. Dossiers Dev et RH
 
-Les équipes `nova-dev` et `nova-rh`, les dossiers `Dev` et `RH`, ainsi que les dashboards de test ont été préparés. Les permissions directes sont `nova-dev → Edit`, `nova-rh → View`, avec Charlie conservé Admin. Les accès effectifs restent à tester manuellement.
+`nova-dev` possède Edit sur Dev et `nova-rh` possède View sur RH. Bob a ouvert Dev et l'action Edit était visible. Bob a été refusé sur RH. Alice a ouvert RH, mais le dashboard Dev est resté accessible : ce résultat est conservé comme échec, sans correction silencieuse.
 
 ## 13. Tests
 
-Les tests TP1 et les tests techniques OIDC sont PASS. Les tests humains TP2 restent `À TESTER` jusqu'à preuve par captures ou validation explicite.
+La matrice complète et les statuts réels sont dans `docs/tests.md`. Les captures disponibles sont listées dans `captures/tp2/README.md`.
 
-Un diagnostic complémentaire a identifié `auth.oauth.state.missing` dans Grafana pendant des retours OAuth relancés hors de leur session initiale. Les mappings et claims sont conformes ; le test doit être rejoué dans une fenêtre privée depuis `http://localhost:3000`.
+![SSO Grafana](../captures/tp2/09-grafana-sso.png)
 
-## 14. Départ de Bob
+![Dashboard](../captures/tp2/11-dashboard.png)
 
-Le script `scripts/deprovision_bob.py` est prêt mais n'a pas été exécuté. La désactivation, révocation des sessions, retrait des groupes et désactivation Grafana seront réalisées en dernier.
+![Dossier Dev](../captures/tp2/14-folder-dev.png)
 
-## 15. Sécurité
+![Dossier RH](../captures/tp2/15-folder-rh.png)
 
-Aucun secret OIDC, mot de passe, QR code MFA, recovery code ou token réel ne doit être stocké dans Git.
+![Bob refusé sur RH](../captures/tp2/16a-bob-rh-denied.png)
 
-## 16. Conclusion
+## 14. Mobilité Bob
 
-Le laboratoire TP1 est opérationnel et le plan TP2 est préparé sans inventer de validations manuelles.
+Le scénario Dev → Audit → Viewer n'a pas été relancé dans cette recette, car le jeton API Authentik n'était pas présent dans l'environnement. Bob est resté dans Dev.
 
-Captures TP2 : toutes restent `MANUAL REQUIRED` dans `captures/tp2/README.md`, car aucune preuve image réelle n'est présente dans le workspace.
+## 15. Départ de Bob
 
+Le déprovisionnement n'a pas été exécuté. Bob reste actif dans Authentik, membre de Dev, actif dans Grafana et membre de `nova-dev`. Les tests de nouvelle connexion et d'ancienne session après départ sont donc `NOT TESTED`.
+
+## 16. Sécurité
+
+Les secrets restent dans `.env`, ignoré par Git. Aucun secret OIDC, mot de passe, QR code MFA, recovery code, token ou cookie n'est dans les captures ou la documentation.
+
+## 17. Conclusion
+
+L'infrastructure et la chaîne OIDC sont fonctionnelles. La recette navigateur fournit des preuves partielles ; deux écarts restent visibles : le contrôle de la liste des utilisateurs Grafana doit être repris sur la route organisationnelle et Alice conserve un accès au dashboard Dev. Les scénarios de mobilité et de déprovisionnement restent à exécuter séparément.

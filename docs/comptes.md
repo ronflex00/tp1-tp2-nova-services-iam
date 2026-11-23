@@ -1,32 +1,36 @@
 # Comptes et attributs métier
 
-Les comptes sont créés manuellement dans Authentik → Directory → Users. Ne pas écrire de mot de passe dans ce document.
+Les mots de passe, secrets MFA et codes de récupération ne sont jamais écrits dans ce document.
 
-| Nom | Username | Email | Service | Fonction |
+## État initial configuré
+
+| Nom | Username | Email | Service | Fonction | Clearance | État |
+|---|---|---|---|---|---:|---|
+| Alice Martin | `alice` | `alice@nova-services.test` | RH | Manager RH | 2 | active |
+| Bob Dupont | `bob` | `bob@nova-services.test` | Development | Backend Developer | 1 | active |
+| Charlie Bernard | `charlie` | `charlie@nova-services.test` | IT | System Administrator | 5 | active |
+
+Attributs Authentik vérifiés : `department`, `role` et `clearance_level`. L'attribut métier `role` ne donne à lui seul aucun droit Authentik, Grafana ou système.
+
+## Groupes initiaux
+
+- Alice → `RH`
+- Bob → `Dev`
+- Charlie → `Admin`
+- `Audit` → aucun membre
+
+## État final observé pour cette recette
+
+| Utilisateur | Authentik | Groupe observé | Rôle Grafana observé | Équipe Grafana |
 |---|---|---|---|---|
-| Alice Martin | `alice` | `alice@nova-services.test` | RH | Responsable RH |
-| Bob Dupont | `bob` | `bob@nova-services.test` | Développement | Développeur Backend |
-| Charlie Bernard | `charlie` | `charlie@nova-services.test` | IT | Administrateur système |
+| Alice | active | `RH` | `Viewer` | `nova-rh` |
+| Bob | active | `Dev` | `Editor` | `nova-dev` |
+| Charlie | active | `Admin` | `Admin` d'organisation | administration conservée |
 
-Paramètres communs : Internal user, Active = oui, Path = `users`.
+Bob n'a pas été déprovisionné dans cette recette. Le compte `mfa-test` n'a pas été identifié dans l'état contrôlé ; aucune conclusion d'inactivation ne doit être inventée.
 
-Attributs à ajouter :
+## Règles de sécurité
 
-| Utilisateur | `department` | `role` | `clearance_level` |
-|---|---|---|---|
-| Alice | `RH` | `Manager RH` | `2` |
-| Bob | `Development` | `Backend Developer` | `1` |
-| Charlie | `IT` | `System Administrator` | `5` |
-
-`role` est un attribut métier. Il ne donne automatiquement ni droit Authentik, ni rôle Grafana, ni privilège système.
-
-Checklist :
-
-- [ ] alice créé
-- [ ] bob créé
-- [ ] charlie créé
-- [ ] mots de passe distincts définis
-- [ ] connexion alice vérifiée
-- [ ] connexion bob vérifiée
-- [ ] connexion charlie vérifiée
-
+- Ne jamais versionner `.env` ou un mot de passe.
+- Ne jamais capturer un QR code, un secret TOTP, un recovery code, un token ou un cookie.
+- Toute désactivation ou modification de groupe doit être consignée dans la matrice de tests.
