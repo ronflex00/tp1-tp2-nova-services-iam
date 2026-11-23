@@ -57,6 +57,43 @@ Correction opérationnelle : ouvrir une fenêtre privée, utiliser `http://local
 
 État des tests utilisateurs : Alice → Viewer et Bob → Editor restent à valider dans un navigateur propre.
 
+## Préparation RBAC Grafana
+
+Préparée par `scripts/prepare_grafana_rbac.py`, de façon idempotente :
+
+| Objet | État | URL/identifiant |
+|---|---|---|
+| Dashboard principal | créé | `http://localhost:3000/d/nova-services-iam/` |
+| Équipe `nova-dev` | créée, Bob membre | équipe Grafana |
+| Équipe `nova-rh` | créée, Alice membre | équipe Grafana |
+| Dossier `Dev` | créé | `http://localhost:3000/dashboards/f/nova-dev/dev` |
+| Dossier `RH` | créé | `http://localhost:3000/dashboards/f/nova-rh/rh` |
+| Dashboard Dev | créé | `http://localhost:3000/d/nova-dev-iam/` |
+| Dashboard RH | créé | `http://localhost:3000/d/nova-rh-iam/` |
+
+Permissions directes préparées : `nova-dev → Edit`, `nova-rh → View`, Charlie conservé en Admin. Les permissions effectives restent `MANUAL TEST REQUIRED`.
+
+## Scénarios préparés
+
+- `scripts/test_bob_audit.py --apply` retire Bob de Dev et l'ajoute à Audit ; `--restore` inverse l'opération ; non exécuté.
+- `scripts/test_alice_no_group.py --apply` retire Alice de RH ; `--restore` la rétablit ; non exécuté.
+- `scripts/deprovision_bob.py --check` est disponible ; `--apply` n'a pas été exécuté.
+
+| Test | Résultat attendu | Résultat observé | Preuve | Statut |
+|---|---|---|---|---|
+| Charlie Admin Grafana | Admin | rôle API actuel Admin | API Grafana | PASS technique |
+| Alice Viewer Grafana | Viewer | rôle API actuel Viewer | API Grafana | PASS technique |
+| Bob Editor Grafana | Editor | rôle API actuel Editor | API Grafana | PASS technique |
+| Alice dashboard principal | lecture seule | non testé navigateur | `11-dashboard.png` | MANUAL TEST REQUIRED |
+| Bob dashboard principal | modification | non testé navigateur | `11-dashboard.png` | MANUAL TEST REQUIRED |
+| Bob Dev folder | Edit | non testé navigateur | `14-folder-dev.png` | MANUAL TEST REQUIRED |
+| Bob RH folder | refus | non testé navigateur | `15-folder-rh.png` | MANUAL TEST REQUIRED |
+| Alice Dev folder | refus | non testé navigateur | `14-folder-dev.png` | MANUAL TEST REQUIRED |
+| Alice RH folder | View | non testé navigateur | `15-folder-rh.png` | MANUAL TEST REQUIRED |
+| Bob Audit | Viewer | scénario préparé, non appliqué | `13-bob-audit.png` | MANUAL TEST REQUIRED |
+| Alice sans RH | refus | scénario préparé, non appliqué | `16-access-denied.png` | MANUAL TEST REQUIRED |
+| Bob deprovisioning | accès retirés | non démarré | `17-bob-disabled.png` | NOT STARTED |
+
 ## Cycle de vie Bob
 
 Bob actif → désactivation Authentik → nouvelle connexion refusée → réactivation → nouvelle connexion autorisée. Ce test ne sera PASS qu'après confirmation humaine.

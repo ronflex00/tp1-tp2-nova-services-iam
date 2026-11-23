@@ -46,7 +46,7 @@ Admin → Admin, Dev → Editor, RH/Audit → Viewer.
 
 ## 12. Permissions de dossiers
 
-À tester avec les dossiers Dev et RH, leurs équipes et leurs permissions dédiées.
+Les équipes `nova-dev` et `nova-rh`, les dossiers `Dev` et `RH`, ainsi que les dashboards de test ont été préparés. Les permissions directes sont `nova-dev → Edit`, `nova-rh → View`, avec Charlie conservé Admin. Les accès effectifs restent à tester manuellement.
 
 ## 13. Tests
 
@@ -56,7 +56,7 @@ Un diagnostic complémentaire a identifié `auth.oauth.state.missing` dans Grafa
 
 ## 14. Départ de Bob
 
-Désactivation, révocation des sessions, retrait des groupes et désactivation Grafana à réaliser en dernier.
+Le script `scripts/deprovision_bob.py` est prêt mais n'a pas été exécuté. La désactivation, révocation des sessions, retrait des groupes et désactivation Grafana seront réalisées en dernier.
 
 ## 15. Sécurité
 
