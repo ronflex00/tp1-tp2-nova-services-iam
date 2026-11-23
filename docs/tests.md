@@ -75,8 +75,8 @@ Permissions directes préparées : `nova-dev → Edit`, `nova-rh → View`, Char
 
 ## Scénarios préparés
 
-- `scripts/test_bob_audit.py --apply` retire Bob de Dev et l'ajoute à Audit ; `--restore` inverse l'opération ; non exécuté.
-- `scripts/test_alice_no_group.py --apply` retire Alice de RH ; `--restore` la rétablit ; non exécuté.
+- `scripts/test_bob_audit.py --apply` puis `--restore` ont été exécutés ; Bob est revenu dans Dev.
+- `scripts/test_alice_no_group.py --apply` a été exécuté ; `--restore` reste en attente de la validation manuelle du refus.
 - `scripts/deprovision_bob.py --check` est disponible ; `--apply` n'a pas été exécuté.
 
 | Test | Résultat attendu | Résultat observé | Preuve | Statut |
@@ -90,9 +90,17 @@ Permissions directes préparées : `nova-dev → Edit`, `nova-rh → View`, Char
 | Bob RH folder | refus | non testé navigateur | `15-folder-rh.png` | MANUAL TEST REQUIRED |
 | Alice Dev folder | refus | non testé navigateur | `14-folder-dev.png` | MANUAL TEST REQUIRED |
 | Alice RH folder | View | non testé navigateur | `15-folder-rh.png` | MANUAL TEST REQUIRED |
-| Bob Audit | Viewer | scénario préparé, non appliqué | `13-bob-audit.png` | MANUAL TEST REQUIRED |
-| Alice sans RH | refus | scénario préparé, non appliqué | `16-access-denied.png` | MANUAL TEST REQUIRED |
+| Mobilité Bob Dev → Audit | Viewer après nouvelle connexion OAuth | Viewer confirmé manuellement selon le scénario utilisateur ; capture absente du workspace | `captures/tp2/13-bob-audit.png` attendue | PASS manuel / preuve fichier absente |
+| Alice sans RH | refus | scénario appliqué, test navigateur en attente | `16-access-denied.png` | MANUAL TEST REQUIRED |
 | Bob deprovisioning | accès retirés | non démarré | `17-bob-disabled.png` | NOT STARTED |
+
+## État après mobilité Bob
+
+Bob a été restauré dans `Dev` et retiré de `Audit`. Son rôle Grafana doit redevenir Editor après une nouvelle connexion OAuth ; le rôle API observé avant cette reconnexion peut encore être Viewer. Aucun rôle Grafana n'a été modifié directement.
+
+## État du test Alice sans groupe
+
+Alice a été retirée temporairement de `RH` et n'appartient plus à aucun groupe autorisé par l'application Grafana. Le refus doit être vérifié dans une nouvelle fenêtre privée avant restauration. Le script `test_alice_no_group.py --restore` n'a pas encore été exécuté.
 
 ## Cycle de vie Bob
 
