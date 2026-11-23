@@ -9,7 +9,7 @@
 | `RH` | Alice | `Viewer` |
 | `Audit` | aucun | `Viewer` |
 
-État observé à la fin de la recette : Alice est dans `RH`, Bob dans `Dev`, Charlie dans `Admin` et `Audit` est vide.
+État initial : Alice est dans `RH`, Bob dans `Dev`, Charlie dans `Admin` et `Audit` est vide. Après le déprovisionnement, Bob n'appartient plus à aucun groupe d'accès ; Alice et Charlie conservent leurs groupes.
 
 `Admin` est un groupe métier Authentik et ne signifie pas Authentik Superuser. Le groupe Admin permet ici le binding de l'application Grafana ; il ne donne pas automatiquement les privilèges d'administration globale d'Authentik.
 
@@ -35,7 +35,7 @@ Charlie conserve l'administration des objets Grafana de démonstration.
 
 ## Mobilité de Bob
 
-Le scénario prévu retire temporairement Bob de `Dev`, l'ajoute à `Audit`, exige une nouvelle connexion OAuth et vérifie le rôle Viewer. La restauration retire Bob de `Audit` et le remet dans `Dev`. Ce scénario n'a pas été exécuté pendant la recette finale faute de jeton API Authentik présent dans l'environnement.
+Le scénario prévu retire temporairement Bob de `Dev`, l'ajoute à `Audit`, exige une nouvelle connexion OAuth et vérifie le rôle Viewer. Ce scénario de mobilité n'a pas été exécuté avant le départ final. Le déprovisionnement a ensuite retiré Bob de ses groupes et de `nova-dev`.
 
 ## Limite observée
 

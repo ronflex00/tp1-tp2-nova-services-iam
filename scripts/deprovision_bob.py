@@ -71,13 +71,33 @@ def main() -> int:
                 api.remove_user(group_obj, bob)
         api.request("DELETE", "/api/v3/core/authenticated_sessions/bulk_delete/", query={"user_pks": bob["pk"]})
         if grafana_bob:
-            gid = grafana_bob["id"]
-            grafana_request("POST", f"/api/admin/users/{gid}/logout", password)
-            grafana_request("PUT", f"/api/users/{gid}", password, {"isDisabled": True})
+            # Grafana 13 returns `userId` from /api/org/users; older versions
+            # exposed the same identifier as `id`.
+            gid = grafana_bob.get("id") or grafana_bob.get("userId")
+            if not gid:
+                raise RuntimeError("Identifiant Grafana de Bob introuvable")
+            try:
+                grafana_request("POST", f"/api/admin/users/{gid}/logout", password)
+                print("Session Grafana Bob révoquée.")
+            except RuntimeError as exc:
+                print(f"Révocation session Grafana indisponible: {exc}")
+            try:
+                grafana_request("POST", f"/api/admin/users/{gid}/disable", password)
+                print("Utilisateur Grafana Bob désactivé.")
+            except RuntimeError as exc:
+                if "HTTP 403" in str(exc) or "HTTP 500" in str(exc):
+                    print(f"Désactivation Grafana indisponible pour ce profil externe ({exc}).")
+                else:
+                    raise
             teams = grafana_request("GET", "/api/teams/search?perpage=100", password).get("teams", [])
             for team in teams:
                 if team.get("name") == "nova-dev":
-                    grafana_request("DELETE", f"/api/teams/{team['id']}/members/{gid}", password)
+                    try:
+                        grafana_request("DELETE", f"/api/teams/{team['id']}/members/{gid}", password)
+                    except RuntimeError as exc:
+                        if "HTTP 404" not in str(exc):
+                            raise
+                    print("Bob absent de l'équipe nova-dev.")
         print("Deprovisioning Bob appliqué; vérifier les sessions et permissions manuellement.")
         return 0
     except RuntimeError as exc:

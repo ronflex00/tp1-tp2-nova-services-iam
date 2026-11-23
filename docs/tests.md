@@ -9,8 +9,8 @@
 | Test | Résultat attendu | Résultat observé | Preuve | Statut |
 |---|---|---|---|---|
 | Identités et attributs | Alice, Bob et Charlie conformes | Vérifiés précédemment par API | Pas de capture 01/02 | PARTIAL |
-| Suspension/réactivation Bob | refus puis autorisation | Scénario non exécuté dans la recette finale | aucune | NOT TESTED |
-| Groupes métier | Admin/Dev/RH/Audit | Alice RH, Bob Dev, Charlie Admin, Audit vide | Pas de capture 03/04 | PARTIAL |
+| Suspension/réactivation Bob | refus puis autorisation | Suspension exécutée ; réactivation non exécutée | aucune | PARTIAL |
+| Groupes métier | Admin/Dev/RH/Audit | Alice RH, Charlie Admin, Bob sans groupe après départ, Audit vide | Pas de capture 03/04 | PARTIAL |
 | MFA obligatoire | facteur exigé | MFA saisi manuellement pour les trois connexions navigateur | aucune capture MFA | PARTIAL |
 | Charlie TOTP valide | connexion acceptée | Connexion Charlie réussie avec MFA | `09-grafana-sso.png` | PASS manuel |
 | Charlie TOTP incorrect | connexion refusée | Non exécuté | aucune | NOT TESTED |
@@ -25,11 +25,11 @@
 | Bob refus dossier RH | accès refusé | Grafana affiche Forbidden | `16a-bob-rh-denied.png` | PASS |
 | Alice refus dossier Dev | accès refusé | Dashboard Dev encore accessible | aucune | FAIL |
 | Alice lecture dossier RH | lecture autorisée | Dashboard RH visible | `15-folder-rh.png` | PARTIAL |
-| Bob Dev → Audit → Viewer | rôle Viewer après reconnexion | Non exécuté : jeton API absent de l'environnement | aucune | NOT TESTED |
+| Bob Dev → Audit → Viewer | rôle Viewer après reconnexion | Non exécuté avant le départ final | aucune | NOT TESTED |
 | Alice sans groupe autorisé | accès refusé | Non exécuté | aucune | NOT TESTED |
-| Déprovisioning Bob | compte et accès retirés | Non exécuté | aucune | NOT TESTED |
-| Nouvelle connexion Bob après départ | refusée | Non exécuté | aucune | NOT TESTED |
-| Ancienne session Bob après départ | comportement documenté | Non exécuté | aucune | NOT TESTED |
+| Déprovisioning Bob | compte et accès retirés | Authentik inactif, groupes retirés, session Grafana révoquée, équipe retirée ; profil Grafana externe non désactivé | aucune | PARTIAL |
+| Nouvelle connexion Bob après départ | refusée | Fenêtre fermée avant observation du refus | `17-bob-disabled.png` absent | NOT TESTED |
+| Ancienne session Bob après départ | comportement documenté | Session conservée avant révocation, résultat du refresh non récupéré | aucune | NOT TESTED |
 
 ## Captures navigateur réalisées
 

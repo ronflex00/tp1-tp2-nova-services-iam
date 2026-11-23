@@ -4,7 +4,7 @@ import fs from 'node:fs/promises';
 import path from 'node:path';
 
 type Username = 'alice' | 'bob' | 'charlie';
-type ResultState = 'PASS' | 'FAIL' | 'BLOCKED' | 'SKIPPED';
+type ResultState = 'PASS' | 'PARTIAL' | 'FAIL' | 'BLOCKED' | 'SKIPPED';
 
 const GRAFANA = process.env.TP2_GRAFANA_URL ?? 'http://localhost:3000';
 const SCREENSHOT_DIR = path.resolve('captures/tp2');
@@ -101,6 +101,13 @@ async function waitForGrafana(page: Page): Promise<void> {
   await page.waitForLoadState('domcontentloaded').catch(() => undefined);
 }
 
+async function waitForRenderedApp(page: Page): Promise<void> {
+  await expect.poll(
+    async () => page.locator('body').innerText().catch(() => ''),
+    { timeout: 30_000, intervals: [500, 1000, 2000] },
+  ).toMatch(/grafana|dashboards|administration|welcome/i);
+}
+
 async function dashboard(page: Page, uid: string): Promise<void> {
   await page.goto(`${GRAFANA}/d/${uid}/`, { waitUntil: 'domcontentloaded' });
   await waitForGrafana(page);
@@ -141,6 +148,7 @@ test.describe('TP2 RBAC navigateur — Nova Services', () => {
       const charlieContext = await newUserContext(browser, 'charlie');
       const charlie = await charlieContext.newPage();
       if (!await login(charlie, 'charlie')) throw new Error('Charlie refusé par le SSO');
+      await waitForRenderedApp(charlie);
       record('Charlie / Login', 'PASS');
       await safeScreenshot(charlie, '09-grafana-sso.png');
       // `/admin/users` is the server-admin route and redirects for an org Admin.
@@ -159,6 +167,7 @@ test.describe('TP2 RBAC navigateur — Nova Services', () => {
       const aliceContext = await newUserContext(browser, 'alice');
       const alice = await aliceContext.newPage();
       if (!await login(alice, 'alice')) throw new Error('Alice refusée par le SSO');
+      await waitForRenderedApp(alice);
       record('Alice / Login', 'PASS');
       await dashboard(alice, 'nova-services-iam');
       await safeScreenshot(alice, '11-dashboard.png');
@@ -179,6 +188,7 @@ test.describe('TP2 RBAC navigateur — Nova Services', () => {
       const bobContext = await newUserContext(browser, 'bob');
       const bob = await bobContext.newPage();
       if (!await login(bob, 'bob')) throw new Error('Bob refusé par le SSO');
+      await waitForRenderedApp(bob);
       record('Bob / Login', 'PASS');
       await dashboard(bob, 'nova-services-iam');
       if (!(await fs.stat(path.join(SCREENSHOT_DIR, '11-dashboard.png')).catch(() => null))) {
@@ -243,8 +253,15 @@ test.describe('TP2 RBAC navigateur — Nova Services', () => {
         if (!RUN_MUTATIONS) {
           record('Bob / deprovisioning', 'BLOCKED', 'TP2_RUN_MUTATIONS=1 est requis avant le déprovisionnement');
         } else {
-          runScript('deprovision_bob.py', '--apply');
-          record('Bob / deprovisioning', 'PASS', 'action exécutée après les scénarios précédents');
+          const output = runScript('deprovision_bob.py', '--apply');
+          const grafanaDisabled = /Utilisateur Grafana Bob désactivé\./i.test(output);
+          record(
+            'Bob / deprovisioning',
+            grafanaDisabled ? 'PASS' : 'PARTIAL',
+            grafanaDisabled
+              ? 'Authentik et Grafana traités'
+              : 'Authentik traité ; profil Grafana externe non désactivé par l’API',
+          );
         }
       } else {
         record('Bob / deprovisioning', 'SKIPPED', 'action destructive désactivée; définir TP2_RUN_DEPROVISION=1 explicitement');
@@ -267,7 +284,7 @@ test.describe('TP2 RBAC navigateur — Nova Services', () => {
         console.log(`${file} : ${exists ? 'présente' : 'absente / MANUAL REQUIRED'}`);
       }
       console.log('\n## Final status');
-      console.log(Object.values(report).includes('FAIL') ? 'PARTIAL' : 'COMPLETE / PARTIAL selon captures et validations manuelles');
+      console.log(Object.values(report).some((state) => state === 'FAIL' || state === 'PARTIAL') ? 'PARTIAL' : 'COMPLETE / PARTIAL selon captures et validations manuelles');
     }
   });
 });

@@ -24,10 +24,10 @@ Attributs Authentik vérifiés : `department`, `role` et `clearance_level`. L'at
 | Utilisateur | Authentik | Groupe observé | Rôle Grafana observé | Équipe Grafana |
 |---|---|---|---|---|
 | Alice | active | `RH` | `Viewer` | `nova-rh` |
-| Bob | active | `Dev` | `Editor` | `nova-dev` |
+| Bob | inactive | aucun groupe d'accès | `Editor`, profil non désactivé | absent de `nova-dev` |
 | Charlie | active | `Admin` | `Admin` d'organisation | administration conservée |
 
-Bob n'a pas été déprovisionné dans cette recette. Le compte `mfa-test` n'a pas été identifié dans l'état contrôlé ; aucune conclusion d'inactivation ne doit être inventée.
+Le déprovisionnement Authentik de Bob a été exécuté. Sa session Grafana a été révoquée et son équipe `nova-dev` ne le contient plus. La désactivation du profil Grafana externe n'est pas supportée par l'endpoint utilisé et reste `non réalisée`. Le compte `mfa-test` n'a pas été identifié dans l'état contrôlé ; aucune conclusion d'inactivation ne doit être inventée.
 
 ## Règles de sécurité
 

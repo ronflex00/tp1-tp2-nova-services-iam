@@ -27,14 +27,14 @@ Les attributs `department`, `role` et `clearance_level` ont été vérifiés pou
 
 ## 5. Cycle de vie
 
-Le cycle de vie de Bob est préparé par scripts, mais le déprovisionnement n'a pas été exécuté pendant la recette finale. Bob est donc encore actif et membre de `Dev`.
+Le déprovisionnement final de Bob a été exécuté : son compte Authentik est inactif, ses groupes ont été retirés et il a été supprimé de l'équipe `nova-dev`. Son profil Grafana externe reste présent et actif car l'endpoint de désactivation renvoie une erreur serveur.
 
 ## 6. RBAC
 
 | Groupe | Membre observé | Rôle Grafana |
 |---|---|---|
 | Admin | Charlie | Admin d'organisation |
-| Dev | Bob | Editor |
+| Dev | Bob avant départ | Editor |
 | RH | Alice | Viewer |
 | Audit | aucun | Viewer si affecté |
 
@@ -52,7 +52,7 @@ Le flux est : navigateur → Grafana → Authentik → login/MFA → authorizati
 
 ## 10. Grafana
 
-Le dashboard principal, les dashboards Dev/RH et les équipes `nova-dev`/`nova-rh` sont configurés. Les rôles API observés sont Alice Viewer, Bob Editor et Charlie Admin.
+Le dashboard principal, les dashboards Dev/RH et les équipes `nova-dev`/`nova-rh` sont configurés. Les rôles API observés sont Alice Viewer, Bob Editor et Charlie Admin ; Bob est désormais absent de `nova-dev`.
 
 ## 11. Mapping des rôles
 
@@ -82,7 +82,7 @@ Le scénario Dev → Audit → Viewer n'a pas été relancé dans cette recette,
 
 ## 15. Départ de Bob
 
-Le déprovisionnement n'a pas été exécuté. Bob reste actif dans Authentik, membre de Dev, actif dans Grafana et membre de `nova-dev`. Les tests de nouvelle connexion et d'ancienne session après départ sont donc `NOT TESTED`.
+Le déprovisionnement Authentik de Bob est terminé : compte inactif, aucun groupe d'accès, session révoquée et équipe `nova-dev` retirée. Grafana conserve son profil externe Editor, non désactivé par l'API disponible. La nouvelle connexion et le comportement de l'ancienne session n'ont pas été observés jusqu'au bout.
 
 ## 16. Sécurité
 
@@ -90,4 +90,4 @@ Les secrets restent dans `.env`, ignoré par Git. Aucun secret OIDC, mot de pass
 
 ## 17. Conclusion
 
-L'infrastructure et la chaîne OIDC sont fonctionnelles. La recette navigateur fournit des preuves partielles ; deux écarts restent visibles : le contrôle de la liste des utilisateurs Grafana doit être repris sur la route organisationnelle et Alice conserve un accès au dashboard Dev. Les scénarios de mobilité et de déprovisionnement restent à exécuter séparément.
+L'infrastructure et la chaîne OIDC sont fonctionnelles. La recette fournit des preuves partielles ; Alice conserve un accès au dashboard Dev malgré la restriction d'équipe, la liste des utilisateurs Grafana doit être reprise, et les tests MFA négatif/recovery restent manuels. Le déprovisionnement Authentik de Bob est réalisé, mais Grafana ne désactive pas son profil OAuth externe.
