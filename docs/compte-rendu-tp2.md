@@ -10,11 +10,11 @@ Authentik reste le fournisseur d'identité. Grafana délègue l'authentification
 
 ## 3. Gestion des identités
 
-Alice, Bob et Charlie sont à créer manuellement selon `docs/comptes.md`.
+Alice, Bob et Charlie existent avec les usernames `alice`, `bob` et `charlie`. Les noms affichés et emails sont conservés.
 
 ## 4. Attributs métier
 
-Les attributs `department`, `role` et `clearance_level` sont documentés sans secret.
+Les attributs `department`, `role` et `clearance_level` ont été vérifiés par API pour les trois comptes, sans modifier leurs groupes ni leur MFA.
 
 ## 5. Cycle de vie
 
@@ -63,4 +63,6 @@ Aucun secret OIDC, mot de passe, QR code MFA, recovery code ou token réel ne do
 ## 16. Conclusion
 
 Le laboratoire TP1 est opérationnel et le plan TP2 est préparé sans inventer de validations manuelles.
+
+Captures TP2 : toutes restent `MANUAL REQUIRED` dans `captures/tp2/README.md`, car aucune preuve image réelle n'est présente dans le workspace.
 

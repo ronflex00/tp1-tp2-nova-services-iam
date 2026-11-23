@@ -14,9 +14,9 @@ Le 23 novembre 2026, avant configuration TP2 :
 
 | Test | Résultat attendu | Résultat observé | Preuve | Statut |
 |---|---|---|---|---|
-| Identités et attributs | Alice, Bob, Charlie conformes | À confirmer | Capture 01/02 | À TESTER |
+| Identités et attributs | Alice, Bob, Charlie conformes | Vérifiés par API : usernames, noms et attributs conformes | Capture 01/02 à prendre | PASS technique / capture à faire |
 | Suspension puis retour de Bob | refus puis autorisation | À confirmer | journal de test | À TESTER |
-| Groupes métier | Admin/Dev/RH/Audit | À confirmer | Capture 03/04 | À TESTER |
+| Groupes métier | Admin/Dev/RH/Audit | Vérifiés par API : affectations conformes, Audit vide | Capture 03/04 à prendre | PASS technique / capture à faire |
 | Compte sans facteur après MFA obligatoire | refus | À confirmer | Capture 07 | À TESTER |
 | Charlie + TOTP valide | PASS | À confirmer | Capture 06 | À TESTER |
 | Charlie + TOTP incorrect | refus | À confirmer | Capture 07 | À TESTER |
