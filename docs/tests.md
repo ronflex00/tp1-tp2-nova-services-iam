@@ -41,6 +41,22 @@ Après configuration, `scripts/verify_oidc.sh` est PASS pour :
 
 Cela ne remplace pas les connexions humaines et le contrôle des rôles.
 
+## Diagnostic SSO Alice/Bob
+
+Les logs observés montrent :
+
+- Authentik authentifie et autorise Alice et Bob avec les scopes `openid profile email nova_groups` ;
+- les claims prévisualisées contiennent respectivement `nova_groups: ["RH"]` et `nova_groups: ["Dev"]` ;
+- le provider est confidentiel, son redirect URI est strict et correct ;
+- l'application contient les bindings Admin, Dev, RH et Audit ;
+- Grafana enregistre `auth.oauth.state.missing` lors de retours OAuth relancés depuis une session qui ne possède plus le cookie d'état.
+
+Cause observée : le callback OAuth n'est pas repris dans la même session navigateur que celle qui a lancé `/login/generic_oauth` (cookie d'état absent, session périmée ou URL de callback rejouée). Aucun défaut de mapping de rôle n'a été trouvé.
+
+Correction opérationnelle : ouvrir une fenêtre privée, utiliser `http://localhost:3000` puis le bouton `Authentik - Nova Services`, conserver `localhost` dans les deux URLs et ne pas ouvrir directement une ancienne URL `/login/generic_oauth`. Les cookies de `localhost:3000` peuvent être supprimés avant un nouvel essai. Cette correction n'a nécessité aucune modification Authentik, aucun changement de rôle et aucun redémarrage de service.
+
+État des tests utilisateurs : Alice → Viewer et Bob → Editor restent à valider dans un navigateur propre.
+
 ## Cycle de vie Bob
 
 Bob actif → désactivation Authentik → nouvelle connexion refusée → réactivation → nouvelle connexion autorisée. Ce test ne sera PASS qu'après confirmation humaine.

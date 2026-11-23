@@ -52,6 +52,8 @@ Admin → Admin, Dev → Editor, RH/Audit → Viewer.
 
 Les tests TP1 et les tests techniques OIDC sont PASS. Les tests humains TP2 restent `À TESTER` jusqu'à preuve par captures ou validation explicite.
 
+Un diagnostic complémentaire a identifié `auth.oauth.state.missing` dans Grafana pendant des retours OAuth relancés hors de leur session initiale. Les mappings et claims sont conformes ; le test doit être rejoué dans une fenêtre privée depuis `http://localhost:3000`.
+
 ## 14. Départ de Bob
 
 Désactivation, révocation des sessions, retrait des groupes et désactivation Grafana à réaliser en dernier.
