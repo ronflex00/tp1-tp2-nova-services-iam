@@ -29,6 +29,18 @@ Le 23 novembre 2026, avant configuration TP2 :
 | Bob désactivé dans Authentik | nouvelle connexion refusée | À confirmer | Capture 17 | À TESTER |
 | Deprovisioning complet | sessions et accès retirés | À confirmer | Capture 18 | À TESTER |
 
+## Validation technique OIDC
+
+Après configuration, `scripts/verify_oidc.sh` est PASS pour :
+
+- provider/application accessibles par la découverte OIDC ;
+- issuer, authorization endpoint, token endpoint, UserInfo et JWKS ;
+- Grafana healthy ;
+- Generic OAuth activé, PKCE actif et URLs front/back-channel correctes ;
+- présence des identifiants OIDC sans afficher leurs valeurs.
+
+Cela ne remplace pas les connexions humaines et le contrôle des rôles.
+
 ## Cycle de vie Bob
 
 Bob actif → désactivation Authentik → nouvelle connexion refusée → réactivation → nouvelle connexion autorisée. Ce test ne sera PASS qu'après confirmation humaine.

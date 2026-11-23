@@ -38,7 +38,7 @@ Provider `nova-grafana-oidc`, scope mapping `nova-grafana-groups` et application
 
 ## 10. Intégration Grafana
 
-La configuration Compose OIDC reste volontairement désactivée jusqu'à création et validation manuelles du provider.
+Le provider `nova-grafana-oidc`, l'application `Grafana — Nova Services` et les bindings Admin/Dev/RH/Audit ont été créés via l'API Authentik. Grafana utilise désormais Generic OAuth avec PKCE, la découverte d'identifiants et les URLs front-channel/back-channel documentées.
 
 ## 11. Mapping des rôles
 
@@ -50,7 +50,7 @@ Admin → Admin, Dev → Editor, RH/Audit → Viewer.
 
 ## 13. Tests
 
-Les tests TP1 sont PASS. Les tests humains TP2 restent `À TESTER` jusqu'à preuve par captures ou validation explicite.
+Les tests TP1 et les tests techniques OIDC sont PASS. Les tests humains TP2 restent `À TESTER` jusqu'à preuve par captures ou validation explicite.
 
 ## 14. Départ de Bob
 

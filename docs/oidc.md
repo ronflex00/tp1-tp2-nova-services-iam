@@ -64,3 +64,9 @@ Un exemple JWT fictif uniquement :
 
 `iss` identifie l'émetteur, `sub` le sujet stable, `aud` le destinataire, `iat` et `exp` les dates de validité, et `nova_groups` les groupes transmis. Une signature garantit l'intégrité, mais ne chiffre pas le contenu.
 
+## Validation technique
+
+Le script `scripts/verify_oidc.sh` vérifie la découverte publique, la santé Grafana, les URL front-channel/back-channel, PKCE, les chemins de claims et la présence des identifiants sans afficher leurs valeurs. La commande ne valide pas une connexion humaine : les tests Charlie/Alice/Bob restent manuels.
+
+Le navigateur utilise `localhost:9000` pour l'autorisation. Grafana utilise `authentik-server:9000` pour l'échange du code et UserInfo sur `iam-network`.
+
