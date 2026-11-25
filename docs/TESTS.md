@@ -14,5 +14,5 @@ curl -fsS http://localhost:3000/api/health | python3 -m json.tool
 
 La liveness indique que le processus répond. La readiness indique que le service est prêt à recevoir du trafic et que ses dépendances sont disponibles. Un code HTTP 200 est attendu pour les deux endpoints ; Grafana doit notamment retourner `"database": "ok"`.
 
-Dans l'environnement actuel, ces tests réseau attendent la libération du port 9000 et le démarrage du projet.
+Contrôle du 25 novembre 2026 : les quatre services sont healthy et tous les contrôles ci-dessus sont PASS. Le port 9000 est utilisé par ce laboratoire. Voir [la recette finale](RECETTE_FINALE.md).
 

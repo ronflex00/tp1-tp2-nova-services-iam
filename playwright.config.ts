@@ -13,6 +13,7 @@ export default defineConfig({
     locale: 'fr-FR',
     colorScheme: 'dark',
     screenshot: 'off',
-    trace: 'retain-on-failure',
+    // Les traces peuvent contenir les requêtes OAuth et les saisies MFA.
+    trace: 'off',
   },
 });

@@ -86,7 +86,7 @@ def main() -> int:
                 print("Utilisateur Grafana Bob désactivé.")
             except RuntimeError as exc:
                 if "HTTP 403" in str(exc) or "HTTP 500" in str(exc):
-                    print(f"Désactivation Grafana indisponible pour ce profil externe ({exc}).")
+                    print(f"Désactivation Grafana échouée, cause à diagnostiquer ({exc}).")
                 else:
                     raise
             teams = grafana_request("GET", "/api/teams/search?perpage=100", password).get("teams", [])

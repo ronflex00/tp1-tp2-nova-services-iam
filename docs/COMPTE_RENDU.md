@@ -1,58 +1,39 @@
 # TP1 — Installation de l'infrastructure IAM
 
-## 1. Contexte
+## 1. Contexte et objectifs
 
-Nova Services. Gitea n'a pas été retenu ; le périmètre comprend PostgreSQL, Authentik Server, Authentik Worker et Grafana.
+Nova Services met en place un laboratoire IAM persistant pour préparer la fédération des identités au TP2. Le périmètre comprend PostgreSQL, Authentik Server, Authentik Worker et Grafana. Gitea a été écarté.
 
-## 2. Objectifs
+## 2. Architecture et services
 
-Déployer une base IAM persistante avec Docker Compose, secrets locaux protégés, healthchecks et préparation du futur SSO OIDC.
+Le [diagramme d'architecture](ARCHITECTURE.md) décrit le réseau Docker iam-network. PostgreSQL conserve la base Authentik ; le serveur fournit l'interface web ; le worker exécute les tâches asynchrones ; Grafana constitue l'application cliente.
 
-## 3. Architecture
+Les ports hôte sont 9000 pour Authentik et 3000 pour Grafana. PostgreSQL et le worker n'ont pas de port publié. Les deux ports web sont actuellement liés à toutes les interfaces.
 
-Voir `docs/ARCHITECTURE.md`. PostgreSQL est interne, Authentik écoute sur 9000 et Grafana sur 3000.
+## 3. Installation et secrets
 
-## 4. Services installés
+La [procédure d'installation](INSTALLATION.md) distingue la reprise du laboratoire existant d'une installation vierge. Le script init_env.py crée les secrets TP1 une seule fois, en mode 0600, et refuse d'écraser un fichier existant. Le Compose final exige les variables OIDC supplémentaires du TP2.
 
-Les versions et rôles sont documentés dans `README.md`.
+## 4. Vérification des conteneurs
 
-## 5. Gestion des secrets
+Le 25 novembre 2026 : configuration Compose valide, quatre services healthy, vérification PostgreSQL, liveness/readiness Authentik, worker et santé Grafana réussies. Voir la [recette finale](RECETTE_FINALE.md).
 
-`scripts/init_env.py` génère `.env` une seule fois avec `secrets.token_hex`, droits 0600 et refus d'écrasement. `.env` est exclu de Git.
+## 5. Accès Authentik et Grafana
 
-## 6. Installation
+Authentik répond sur http://localhost:9000 et Grafana sur http://localhost:3000. L'initialisation des comptes administrateurs a déjà eu lieu ; elle n'a pas été rejouée pour le rendu.
 
-Voir `docs/INSTALLATION.md`.
+![Écran de connexion Grafana actuel](../captures/tp1/03-grafana-login.png)
 
-## 7. Vérifications
+Cette image prouve le chargement de l'interface de connexion, pas la réussite d'une authentification.
 
-Résultats réels à compléter après démarrage. `scripts/verify.sh` fournit la recette automatisée.
+## 6. Persistance
 
-## 8. Initialisation Authentik
+Les volumes postgres_data et grafana_data et le montage data/authentik sont présents. La [procédure de persistance](PERSISTENCE.md) reste documentée. Aucun redémarrage ni cycle de suppression/recréation n'a été exécuté dans cette recette ; aucune comparaison visuelle avant/après n'est disponible.
 
-À effectuer manuellement sur `http://localhost:9000/if/flow/initial-setup/` avec le compte `akadmin`. Ne pas placer son mot de passe dans un fichier du projet.
+## 7. Captures et questions
 
-## 9. Initialisation Grafana
+L'[inventaire des captures TP1](../captures/tp1/README.md) distingue les fichiers présents et manquants. Les [réponses TP1](REPONSES_TP.md) couvrent les identités, les ports, les secrets, la persistance et les sauvegardes.
 
-À effectuer sur `http://localhost:3000` avec `admin` et la valeur locale de `GRAFANA_ADMIN_PASSWORD`.
+## 8. Sécurité et conclusion
 
-## 10. Test de persistance
-
-Voir `docs/PERSISTENCE.md`. À réaliser après initialisation ; aucune capture fictive n'est fournie.
-
-## 11. Sécurité
-
-PostgreSQL n'est pas publié, aucun socket Docker n'est monté, aucun `privileged: true` ni `chmod -R 777` n'est utilisé. Les secrets ne sont pas écrits dans Compose ni dans les fichiers suivis.
-
-## 12. Conclusion
-
-Le socle TP1 est préparé. Le SSO Authentik/Grafana est réservé au TP2.
-
-Captures à insérer :
-
-- [CAPTURE 1 — docker compose ps]
-- [CAPTURE 2 — Administration Authentik]
-- [CAPTURE 3 — Grafana]
-- [CAPTURE 4 — Groupe tp1-persistence avant redémarrage]
-- [CAPTURE 5 — Groupe tp1-persistence après redémarrage]
-
+PostgreSQL reste interne, le socket Docker n'est pas monté, aucun service n'est privilégié et les secrets ne sont pas versionnés. Le socle TP1 est opérationnel ; le test de persistance avec preuve avant/après reste PARTIAL.

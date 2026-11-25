@@ -4,6 +4,8 @@
 
 Nova Services complète le laboratoire TP1 avec la gestion des identités Authentik, le MFA, le RBAC et le SSO OIDC vers Grafana.
 
+Actualisation du 25 novembre 2026 : voir [la recette finale](RECETTE_FINALE.md). Alice est actuellement active sans groupe Authentik et sans dispositif TOTP/Static ; son profil Grafana reste Viewer. Bob reste inactif Authentik. Les observations historiques ci-dessous ne remplacent pas ces mesures.
+
 ## 2. Architecture
 
 Authentik est l'Identity Provider. Grafana est le client OIDC. PostgreSQL reste interne au réseau Docker `iam-network`.
@@ -27,7 +29,7 @@ Les attributs `department`, `role` et `clearance_level` ont été vérifiés pou
 
 ## 5. Cycle de vie
 
-Le déprovisionnement final de Bob a été exécuté : son compte Authentik est inactif, ses groupes ont été retirés et il a été supprimé de l'équipe `nova-dev`. Son profil Grafana externe reste présent et actif car l'endpoint de désactivation renvoie une erreur serveur.
+Le déprovisionnement final de Bob a été exécuté : son compte Authentik est inactif, ses groupes ont été retirés et il a été supprimé de l'équipe nova-dev. Son profil Grafana externe reste présent et actif ; l'endpoint de désactivation a renvoyé HTTP 500, sans cause démontrée.
 
 ## 6. RBAC
 
@@ -40,7 +42,7 @@ Le déprovisionnement final de Bob a été exécuté : son compte Authentik est 
 
 ## 7. MFA
 
-Les connexions navigateur de Charlie, Alice et Bob ont demandé une intervention MFA manuelle et ont abouti. Les scénarios de mauvais code et de compte sans facteur n'ont pas été exécutés.
+Les exécutions historiques ont signalé une étape MFA et une connexion réussie. Le scénario ne vérifiait pas systématiquement l'identité connectée ; ces journaux ne suffisent donc pas à prouver le MFA des trois comptes. Au contrôle actuel, Charlie possède TOTP et Static, Bob TOTP, Alice aucun des deux. Les tests de code incorrect et de compte sans facteur restent NOT TESTED.
 
 ## 8. Recovery
 
@@ -60,7 +62,7 @@ Le dashboard principal, les dashboards Dev/RH et les équipes `nova-dev`/`nova-r
 
 ## 12. Dossiers Dev et RH
 
-`nova-dev` possède Edit sur Dev et `nova-rh` possède View sur RH. Bob a ouvert Dev et l'action Edit était visible. Bob a été refusé sur RH. Alice a ouvert RH, mais le dashboard Dev est resté accessible : ce résultat est conservé comme échec, sans correction silencieuse.
+L'API confirme nova-dev → Edit sur Dev, nova-rh → View sur RH et Charlie → Admin sur les deux dossiers. Les captures historiques montrent un dashboard Dev et un refus RH. Elles n'affichent pas l'identité du compte ; les contrôles d'accès par utilisateur restent PARTIAL. Le journal historique signalait Alice → Dev comme FAIL, avec une attente de rendu insuffisante.
 
 ## 13. Tests
 
@@ -72,17 +74,17 @@ La matrice complète et les statuts réels sont dans `docs/tests.md`. Les captur
 
 ![Dossier Dev](../captures/tp2/14-folder-dev.png)
 
-![Dossier RH](../captures/tp2/15-folder-rh.png)
+![Diagnostic historique RH : Forbidden, sans preuve de lecture autorisée](../captures/tp2/15-folder-rh.png)
 
 ![Bob refusé sur RH](../captures/tp2/16a-bob-rh-denied.png)
 
 ## 14. Mobilité Bob
 
-Le scénario Dev → Audit → Viewer n'a pas été relancé dans cette recette, car le jeton API Authentik n'était pas présent dans l'environnement. Bob est resté dans Dev.
+Le scénario Dev → Audit → Viewer n'a pas été rejoué pour le rendu. Une validation manuelle avait été déclarée dans le journal antérieur, mais aucune capture correspondante n'est disponible. Après son départ, Bob n'appartient plus à Dev.
 
 ## 15. Départ de Bob
 
-Le déprovisionnement Authentik de Bob est terminé : compte inactif, aucun groupe d'accès, session révoquée et équipe `nova-dev` retirée. Grafana conserve son profil externe Editor, non désactivé par l'API disponible. La nouvelle connexion et le comportement de l'ancienne session n'ont pas été observés jusqu'au bout.
+Le contrôle actuel confirme Bob inactif Authentik, sans groupe et absent de nova-dev. Des requêtes de révocation de session ont été acceptées lors du départ ; l'effet sur une session existante n'a pas été observé. Grafana conserve son profil Editor ; la requête de désactivation a échoué. Nouvelle connexion et ancienne session après départ restent NOT TESTED.
 
 ## 16. Sécurité
 
@@ -90,4 +92,4 @@ Les secrets restent dans `.env`, ignoré par Git. Aucun secret OIDC, mot de pass
 
 ## 17. Conclusion
 
-L'infrastructure et la chaîne OIDC sont fonctionnelles. La recette fournit des preuves partielles ; Alice conserve un accès au dashboard Dev malgré la restriction d'équipe, la liste des utilisateurs Grafana doit être reprise, et les tests MFA négatif/recovery restent manuels. Le déprovisionnement Authentik de Bob est réalisé, mais Grafana ne désactive pas son profil OAuth externe.
+L'infrastructure et la configuration OIDC sont fonctionnelles. La recette reste PARTIAL pour l'isolation des dossiers, les tests MFA négatifs, les codes de récupération et les sessions après départ. Les rôles Grafana et l'état Authentik sont vérifiés en lecture seule ; aucune reconstitution de scénario historique n'a été réalisée.

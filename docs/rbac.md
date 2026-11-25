@@ -9,7 +9,7 @@
 | `RH` | Alice | `Viewer` |
 | `Audit` | aucun | `Viewer` |
 
-État initial : Alice est dans `RH`, Bob dans `Dev`, Charlie dans `Admin` et `Audit` est vide. Après le déprovisionnement, Bob n'appartient plus à aucun groupe d'accès ; Alice et Charlie conservent leurs groupes.
+État initial prévu : Alice dans RH, Bob dans Dev, Charlie dans Admin et Audit vide. Le contrôle du 25 novembre trouve Alice et Bob sans groupe Authentik, Charlie dans Admin. Alice conserve l'équipe Grafana nova-rh ; Bob est absent de nova-dev. Ces écarts sont consignés sans modifier les droits.
 
 `Admin` est un groupe métier Authentik et ne signifie pas Authentik Superuser. Le groupe Admin permet ici le binding de l'application Grafana ; il ne donne pas automatiquement les privilèges d'administration globale d'Authentik.
 
@@ -39,7 +39,9 @@ Le scénario prévu retire temporairement Bob de `Dev`, l'ajoute à `Audit`, exi
 
 ## Limite observée
 
-Le test navigateur a montré qu'Alice peut encore ouvrir directement le dashboard Dev malgré l'absence de son appartenance à `nova-dev`. Ce résultat est conservé comme `FAIL` dans `docs/tests.md` : aucune permission n'a été corrigée silencieusement pendant la phase de rendu.
+Le scénario historique a signalé un accès Alice → Dev, mais son attente de rendu pouvait s'arrêter sur le texte du menu ou une ancienne page. Il ne vérifiait pas non plus l'identité réellement connectée. Le résultat historique FAIL est conservé avec cette réserve, et ne démontre pas la cause.
+
+Au 25 novembre, l'API montre uniquement Charlie → Admin et nova-dev → Edit sur Dev, Charlie → Admin et nova-rh → View sur RH ; aucune entrée générale Viewer/Editor n'est retournée. Aucune permission n'a été changée lors de cet audit.
 
 ## Property Mapping
 

@@ -23,11 +23,13 @@ Attributs Authentik vérifiés : `department`, `role` et `clearance_level`. L'at
 
 | Utilisateur | Authentik | Groupe observé | Rôle Grafana observé | Équipe Grafana |
 |---|---|---|---|---|
-| Alice | active | `RH` | `Viewer` | `nova-rh` |
+| Alice | active | aucun (écart observé le 25/11/2026) | `Viewer` | `nova-rh` |
 | Bob | inactive | aucun groupe d'accès | `Editor`, profil non désactivé | absent de `nova-dev` |
 | Charlie | active | `Admin` | `Admin` d'organisation | administration conservée |
 
-Le déprovisionnement Authentik de Bob a été exécuté. Sa session Grafana a été révoquée et son équipe `nova-dev` ne le contient plus. La désactivation du profil Grafana externe n'est pas supportée par l'endpoint utilisé et reste `non réalisée`. Le compte `mfa-test` n'a pas été identifié dans l'état contrôlé ; aucune conclusion d'inactivation ne doit être inventée.
+Le déprovisionnement Authentik de Bob a été exécuté ; le contrôle du 25 novembre confirme son état inactif et l'absence de groupe. La révocation de session Grafana a été demandée lors du départ ; son effet sur une ancienne session n'a pas été observé. La désactivation du profil Grafana a échoué avec HTTP 500. Cela ne démontre pas une limitation générale des profils OAuth externes. Le compte mfa-test est absent.
+
+MFA enregistré au 25 novembre : Charlie a un périphérique TOTP et un dispositif Static ; Bob a un TOTP ; Alice n'a ni TOTP ni Static. Ce contrôle porte uniquement sur les nombres de dispositifs, sans lire leurs secrets. Le groupe RH d'Alice indiqué dans l'état initial n'est plus son état courant.
 
 ## Règles de sécurité
 

@@ -7,6 +7,7 @@ backups/
 captures/*
 !captures/tp1/
 !captures/tp1/README.md
+!captures/tp1/*.png
 !captures/tp2/
 !captures/tp2/README.md
 !captures/tp2/*.png

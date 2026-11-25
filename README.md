@@ -1,131 +1,134 @@
-# Nova Services — IAM Laboratory
+# Nova Services — IAM Lab
 
-## Objectif
+Laboratoire scolaire de gestion des identités : construire un socle Docker persistant, fédérer la connexion avec Authentik, puis vérifier les habilitations Grafana. Gitea a volontairement été écarté.
 
-Installer puis faire évoluer un laboratoire IAM Nova Services avec Docker Compose, secrets locaux, persistance et contrôles de santé. Gitea n'est pas retenu.
+La [recette finale du 25 novembre 2026](docs/RECETTE_FINALE.md) distingue l'état mesuré, les preuves historiques et les tests manquants. Le rendu reste **PARTIAL**.
 
 ## TP1 — Infrastructure IAM
 
-- Docker Compose
-- PostgreSQL
-- Authentik Server et Worker
-- Grafana
-- persistance
-- healthchecks
+PostgreSQL, Authentik Server/Worker et Grafana partagent un réseau Docker. Des healthchecks contrôlent le démarrage et des volumes conservent les données.
 
-## TP2 — Identity & Access Management
+[Compte rendu TP1](docs/COMPTE_RENDU.md) · [Réponses TP1](docs/REPONSES_TP.md) · [Persistance](docs/PERSISTENCE.md)
 
-- identités et attributs métier
-- RBAC
-- MFA TOTP et récupération
-- SSO OIDC vers Grafana
-- mapping des rôles et deprovisioning
-- provisioning utilisateurs
-- cycle de vie
-- équipes Grafana
-- permissions de dossiers
+## TP2 — Gouvernance des identités et habilitations
+
+Identités et attributs métier, groupes Admin/Dev/RH/Audit, MFA TOTP, récupération, SSO OIDC, mapping des rôles, équipes et permissions de dossiers. Le départ de Bob a été appliqué dans Authentik.
+
+[Compte rendu TP2](docs/compte-rendu-tp2.md) · [Réponses TP2](docs/questions-tp2.md) · [Matrice des tests](docs/tests.md)
+
+## Technologies
+
+| Composant | Version configurée | Exposition hôte |
+|---|---|---|
+| PostgreSQL | 16-alpine | aucune |
+| Authentik Server | 2026.8.6 | 9000 |
+| Authentik Worker | 2026.8.6 | aucune |
+| Grafana | 13.3.1 | 3000 |
+| Docker Compose | v2 requis | réseau iam-network |
+| Playwright | 1.65.1 dans le lockfile | Chromium uniquement |
 
 ## Architecture
 
-Les quatre services partagent le réseau Docker `iam-network`. Authentik utilise PostgreSQL en réseau interne.
-
 ```mermaid
 flowchart LR
-  U[Utilisateur] --> G[Grafana]
-  G --> A[Authentik]
-  A --> M[MFA]
-  A --> C[Authorization Code]
-  C --> G
-  G --> T[Token / UserInfo]
-  A --> P[(PostgreSQL)]
+    B["Navigateur"] -->|"HTTP 3000"| G["Grafana"]
+    B -->|"Login et MFA / HTTP 9000"| A["Authentik Server"]
+    G -->|"Code OIDC, token et UserInfo"| A
+    A --> P[("PostgreSQL interne")]
+    W["Authentik Worker"] --> P
+    G --> V[("Volume grafana_data")]
+    P --> D[("Volume postgres_data")]
+    A --> F["Données Authentik partagées"]
+    W --> F
 ```
-
-## Services
-
-| Service | Rôle | Port |
-|---|---|---|
-| PostgreSQL | Base Authentik | interne uniquement |
-| Authentik Server | IAM | 9000 |
-| Authentik Worker | tâches asynchrones | aucun |
-| Grafana | tableaux de bord | 3000 |
-
-## Prérequis
-
-Docker Engine, Docker Compose v2 et Python 3.9 ou supérieur.
 
 ## Installation
 
-```bash
-python3 scripts/init_env.py
-```
+Prévoir Docker Compose v2 et Python 3.9+. Node 20+ est nécessaire seulement pour les captures Playwright.
 
-Le script refuse de remplacer un `.env` existant. Ne jamais versionner `.env`.
-
-## Démarrage
+Le laboratoire existant est déjà initialisé. Pour le reprendre :
 
 ```bash
-docker compose pull
-docker compose run --rm --no-deps --user 0 --entrypoint sh authentik-server -c 'mkdir -p /data/media && chown -R 1000:1000 /data'
 docker compose up -d --wait --wait-timeout 600
+./scripts/verify.sh
+./scripts/verify_oidc.sh
 ```
 
-## Initialisation Authentik
+Pour une installation vierge, suivre [INSTALLATION.md](docs/INSTALLATION.md). Le Compose final exige aussi un Client ID et un Client Secret OIDC : le script de génération des secrets TP1 ne suffit pas, à lui seul, à recréer toute la configuration TP2.
 
-Ouvrir `http://localhost:9000/if/flow/initial-setup/` avec le `/` final. Créer manuellement le compte `akadmin` avec un mot de passe fort, puis vérifier Users, Groups, Applications, Flows and Stages.
+## Configuration sécurisée
 
-## Initialisation Grafana
+[.env.example](.env.example) décrit les variables ; les valeurs réelles restent dans un fichier local .env de mode 0600. La modification du mot de passe dans ce fichier ne réinitialise pas un compte Grafana existant.
 
-Ouvrir `http://localhost:3000`, avec `admin` et la valeur locale de `GRAFANA_ADMIN_PASSWORD`. Modifier cette variable après initialisation ne réinitialise pas nécessairement le mot de passe déjà stocké.
+Grafana utilise localhost:9000 dans le navigateur et authentik-server:9000 pour le back channel. Le [document OIDC](docs/oidc.md) détaille le flux et la claim nova_groups.
 
-## Vérifications
+## Tests automatisés
 
 ```bash
 docker compose config --quiet
-docker compose ps
-bash scripts/verify.sh
+./scripts/verify.sh
+./scripts/verify_oidc.sh
+curl -fsS http://localhost:3000/api/health
+npm ci
+npx playwright install chromium
+node scripts/capture_release.mjs
 ```
 
-## Test de persistance
+Le script de captures consulte les écrans courants et la liste des utilisateurs Grafana avec le compte local existant. Il ne modifie pas les habilitations. Les sessions restent en mémoire et le navigateur est fermé à la fin.
 
-Créer `tp1-persistence` dans Authentik, exécuter `docker compose down`, puis `docker compose up -d --wait --wait-timeout 600`. Vérifier que `akadmin`, le groupe et Grafana existent toujours, puis supprimer uniquement le groupe.
+La suite historique tests/e2e/tp2-rbac.spec.ts est conservée comme scénario pédagogique. Elle suppose Bob actif et doit être considérée comme partielle : ses anciennes détections de rendu ne prouvent pas toutes les autorisations. Ne pas la relancer intégralement dans l'état final, ni activer ses options de mutation.
 
-## Arrêt
+## Tests fonctionnels
 
-```bash
-docker compose stop
-```
+La [matrice TP2](docs/tests.md) contient les résultats observés. Une connexion MFA exige une intervention humaine. Les tests négatifs TOTP, récupération, sauvegarde Editor et sessions après départ restent incomplets.
 
-## Reprise
+## Captures et preuves
 
-```bash
-docker compose up -d --wait --wait-timeout 600
-```
+[Inventaire TP1](captures/tp1/README.md) · [Inventaire TP2](captures/tp2/README.md)
 
-## Suppression des conteneurs
+Écran de connexion Grafana actuel :
 
-```bash
-docker compose down
-```
+![Connexion Grafana](captures/tp1/03-grafana-login.png)
 
-Ne pas utiliser `docker compose down -v` sauf si l'on souhaite réellement supprimer les données persistantes.
+Dashboard historique, sans preuve de sauvegarde :
 
-## Préparation du TP2
+![Dashboard Nova Services](captures/tp2/11-dashboard.png)
 
-Le TP2 ajoute la relation `Authentik` → `OAuth2 / OIDC` → `Grafana`. Suivre les procédures dans `docs/comptes.md`, `docs/rbac.md`, `docs/oidc.md` et `docs/tests.md`. Le SSO n'est activé dans Compose qu'après création manuelle du provider et validation de la découverte OIDC.
+Dashboard Dev historique ; l'image seule n'identifie pas le compte :
 
-## Automatisation navigateur TP2
+![Dashboard Dev](captures/tp2/14-folder-dev.png)
 
-Playwright utilise uniquement Chromium, une viewport `1440x900` et un contexte isolé par utilisateur. Les identifiants et le MFA restent saisis manuellement dans la fenêtre Chromium ; aucun secret, QR code ou cookie n'est capturé.
+Refus RH historique :
 
-```bash
-npm run test:e2e -- --headed
-```
+![Accès RH refusé](captures/tp2/16a-bob-rh-denied.png)
 
-La suite capture les preuves qui peuvent être validées automatiquement et indique `SKIPPED` ou `BLOCKED` pour les contrôles nécessitant une action humaine. Les mutations de groupes sont désactivées par défaut :
+## Documentation
 
-```bash
-TP2_RUN_MUTATIONS=1 npm run test:e2e -- --headed
-```
+- [Architecture](docs/ARCHITECTURE.md), [installation](docs/INSTALLATION.md), [tests TP1](docs/TESTS.md).
+- [Comptes](docs/comptes.md), [RBAC](docs/rbac.md), [MFA et récupération](docs/recovery.md).
+- [OIDC](docs/oidc.md), [recette finale](docs/RECETTE_FINALE.md).
 
-Le déprovisionnement de Bob est une action séparée et destructive ; il ne s'exécute qu'avec `TP2_RUN_DEPROVISION=1` en plus de `TP2_RUN_MUTATIONS=1`. Les captures sont écrites dans `captures/tp2/`, les états temporaires dans `.tmp/playwright/`, puis supprimés en fin de test.
+## Sécurité
 
+Aucun volume n'a été supprimé et Bob n'a pas été réactivé pour le rendu. Les secrets, bases de données, cookies, traces et états Playwright sont exclus de Git. Les captures ont été inspectées ; les valeurs locales et les motifs de secrets ont aussi été recherchés dans l'historique.
+
+Les ports 9000 et 3000 sont publiés sur toutes les interfaces de l'hôte et le laboratoire utilise HTTP. Ce rendu décrit un environnement pédagogique, pas un déploiement de production.
+
+## Résultats
+
+| Contrôle | Statut |
+|---|---|
+| Compose, quatre services, santé PostgreSQL/Authentik/Grafana | PASS |
+| Découverte OIDC et configuration PKCE | PASS |
+| Rôles Grafana Alice Viewer, Bob Editor, Charlie Admin | PASS API |
+| Bob inactif Authentik, sans groupe, absent de nova-dev | PASS état courant |
+| Désactivation du profil Grafana Bob et tests après départ | PARTIAL |
+| MFA obligatoire et isolation effective Dev/RH | PARTIAL |
+
+## Limites
+
+Alice est active sans groupe Authentik et sans périphérique MFA enregistré ; son profil Grafana reste Viewer dans nova-rh. La capture 15-folder-rh.png montre un refus, contrairement à son ancienne légende. La cause d'accès Dev n'est pas démontrée ; les ACL courantes sont limitées aux équipes et à Charlie. Les preuves historiques manquantes ne sont pas reconstituées.
+
+## Conclusion
+
+Le socle IAM et la configuration OIDC sont vérifiés. Les documents et preuves rendent visibles les limites restantes. Aucun remote n'est configuré ; le dépôt cible proposé est ronflex00/tp1-tp2-nova-services-iam. La publication attend une décision sur les tests incomplets.

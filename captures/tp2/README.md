@@ -13,14 +13,15 @@ Les statuts décrivent uniquement les fichiers réellement présents dans ce dos
 | `07-mfa-denied.png` | MFA refusé | MISSING |
 | `08-oidc-provider.png` | Provider sans secret | MISSING |
 | `09-grafana-sso.png` | Grafana après connexion OIDC | DONE |
-| `10-grafana-users.png` | Rôles Grafana | MISSING |
+| `10-grafana-users.png` | Liste des trois profils et origine OAuth, compte admin local | DONE |
+| `10a-grafana-roles.png` | Rôles d'organisation, compte admin local | DONE |
 | `11-dashboard.png` | Dashboard Nova Services | DONE |
 | `12-viewer-denied.png` | Alice sans modification | MISSING |
 | `13-bob-audit.png` | Bob Viewer après Audit | MISSING |
-| `14-folder-dev.png` | Bob sur le dossier Dev | DONE |
-| `15-folder-rh.png` | Alice sur le dossier RH | DONE |
+| `14-folder-dev.png` | Dashboard Dev historique ; compte non identifiable dans l'image | DONE / preuve limitée |
+| `15-folder-rh.png` | Diagnostic historique Forbidden ; ne prouve pas la lecture RH | DONE diagnostic / lecture MISSING |
 | `16-access-denied.png` | Refus Alice sans groupe | MISSING |
-| `16a-bob-rh-denied.png` | Refus Bob sur le dossier RH | DONE |
+| `16a-bob-rh-denied.png` | Refus RH historique attribué à Bob par le scénario ; identité non visible | DONE / preuve limitée |
 | `17-bob-disabled.png` | Bob désactivé | MISSING |
 | `18-final-state.png` | État final | MISSING |
 
