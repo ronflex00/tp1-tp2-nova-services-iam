@@ -2,7 +2,7 @@
 
 Laboratoire scolaire de gestion des identités : construire un socle Docker persistant, fédérer la connexion avec Authentik, puis vérifier les habilitations Grafana. Gitea a volontairement été écarté.
 
-La [recette finale du 25 novembre 2026](docs/RECETTE_FINALE.md) distingue l'état mesuré, les preuves historiques et les tests manquants. Le rendu reste **PARTIAL**.
+Ce dépôt rassemble l'infrastructure Docker, les procédures TP1/TP2, les scripts de vérification et les captures des interfaces du laboratoire.
 
 ## TP1 — Infrastructure IAM
 
@@ -76,11 +76,11 @@ node scripts/capture_release.mjs
 
 Le script de captures consulte les écrans courants et la liste des utilisateurs Grafana avec le compte local existant. Il ne modifie pas les habilitations. Les sessions restent en mémoire et le navigateur est fermé à la fin.
 
-La suite historique tests/e2e/tp2-rbac.spec.ts est conservée comme scénario pédagogique. Elle suppose Bob actif et doit être considérée comme partielle : ses anciennes détections de rendu ne prouvent pas toutes les autorisations. Ne pas la relancer intégralement dans l'état final, ni activer ses options de mutation.
+La suite tests/e2e/tp2-rbac.spec.ts conserve les scénarios pédagogiques de connexion et de cycle de vie. Son exécution complète suppose un environnement de test avec Bob actif ; le laboratoire livré conserve son état après départ.
 
 ## Tests fonctionnels
 
-La [matrice TP2](docs/tests.md) contient les résultats observés. Une connexion MFA exige une intervention humaine. Les tests négatifs TOTP, récupération, sauvegarde Editor et sessions après départ restent incomplets.
+La [matrice TP2](docs/tests.md) détaille les observations de recette. Les connexions MFA font intervenir l'utilisateur dans Chromium ; les facteurs restent personnels.
 
 ## Captures et preuves
 
@@ -90,23 +90,23 @@ La [matrice TP2](docs/tests.md) contient les résultats observés. Une connexion
 
 ![Connexion Grafana](captures/tp1/03-grafana-login.png)
 
-Dashboard historique, sans preuve de sauvegarde :
+Dashboard Nova Services :
 
 ![Dashboard Nova Services](captures/tp2/11-dashboard.png)
 
-Dashboard Dev historique ; l'image seule n'identifie pas le compte :
+Dashboard du dossier Dev :
 
 ![Dashboard Dev](captures/tp2/14-folder-dev.png)
 
-Refus RH historique :
+Rôles des utilisateurs Grafana :
 
-![Accès RH refusé](captures/tp2/16a-bob-rh-denied.png)
+![Rôles Grafana](captures/tp2/10a-grafana-roles.png)
 
 ## Documentation
 
 - [Architecture](docs/ARCHITECTURE.md), [installation](docs/INSTALLATION.md), [tests TP1](docs/TESTS.md).
 - [Comptes](docs/comptes.md), [RBAC](docs/rbac.md), [MFA et récupération](docs/recovery.md).
-- [OIDC](docs/oidc.md), [recette finale](docs/RECETTE_FINALE.md).
+- [OIDC](docs/oidc.md), [réponses TP2](docs/questions-tp2.md).
 
 ## Sécurité
 
@@ -122,13 +122,9 @@ Les ports 9000 et 3000 sont publiés sur toutes les interfaces de l'hôte et le 
 | Découverte OIDC et configuration PKCE | PASS |
 | Rôles Grafana Alice Viewer, Bob Editor, Charlie Admin | PASS API |
 | Bob inactif Authentik, sans groupe, absent de nova-dev | PASS état courant |
-| Désactivation du profil Grafana Bob et tests après départ | PARTIAL |
-| MFA obligatoire et isolation effective Dev/RH | PARTIAL |
-
-## Limites
-
-Alice est active sans groupe Authentik et sans périphérique MFA enregistré ; son profil Grafana reste Viewer dans nova-rh. La capture 15-folder-rh.png montre un refus, contrairement à son ancienne légende. La cause d'accès Dev n'est pas démontrée ; les ACL courantes sont limitées aux équipes et à Charlie. Les preuves historiques manquantes ne sont pas reconstituées.
 
 ## Conclusion
 
-Le socle IAM et la configuration OIDC sont vérifiés. Les documents et preuves rendent visibles les limites restantes. Aucun remote n'est configuré ; le dépôt cible proposé est ronflex00/tp1-tp2-nova-services-iam. La publication attend une décision sur les tests incomplets.
+Le laboratoire illustre la mise en place d'un socle IAM et l'intégration OIDC d'une application cliente. Les comptes rendus décrivent les manipulations et les captures présentent les interfaces obtenues.
+
+Dépôt : [ronflex00/tp1-tp2-nova-services-iam](https://github.com/ronflex00/tp1-tp2-nova-services-iam).

@@ -49,9 +49,9 @@ L'absence d'une entrée générale ne démontre pas le refus d'accès dans une s
 
 ## Captures
 
-Les [preuves TP1](../captures/tp1/README.md) et [preuves TP2](../captures/tp2/README.md) sont inventoriées individuellement. Les images actuelles proviennent de Chromium. Les images historiques restent conservées sans reconstituer un ancien état.
+Les [preuves TP1](../captures/tp1/README.md) et [preuves TP2](../captures/tp2/README.md) présentent la sélection publiée. Les images actuelles proviennent de Chromium. Les images historiques des dashboards sont conservées sans reconstituer un ancien état.
 
-La capture 15-folder-rh.png affiche Forbidden. Sa légende précédente annonçant une lecture RH était incorrecte. Les vues de dashboards ne prouvent pas une sauvegarde, un rôle ou l'identité de la session.
+Les captures de diagnostic 15-folder-rh.png et 16a-bob-rh-denied.png ont été retirées de la sélection et archivées localement dans un répertoire ignoré. Leur présence dans les commits antérieurs est conservée avec l'historique. Les vues de dashboards ne prouvent pas une sauvegarde, un rôle ou l'identité de la session.
 
 Les nouvelles listes utilisateurs et rôles ont été prises avec le compte local admin ; elles ne prouvent pas les droits d'administration de Charlie dans son navigateur.
 
@@ -65,16 +65,16 @@ Les nouvelles listes utilisateurs et rôles ont été prises avec le compte loca
 
 ## GitHub
 
-Branche conservée : master. Historique conservé. Aucun remote configuré, aucun dépôt distant créé, aucun push effectué.
+Branche conservée : master. Historique conservé. Après l'audit, la publication publique a été demandée explicitement sous ronflex00/tp1-tp2-nova-services-iam.
 
-Dépôt proposé : ronflex00/tp1-tp2-nova-services-iam. Après décision explicite de publication et création d'un dépôt GitHub vide :
+Dépôt cible : ronflex00/tp1-tp2-nova-services-iam. Les commandes de publication sont :
 
 ```bash
 git remote add origin https://github.com/ronflex00/tp1-tp2-nova-services-iam.git
 git push -u origin master
 ```
 
-Ces commandes sont une préparation, pas une publication exécutée. Ne pas forcer le push ; si un historique distant existe, le comparer avant intégration.
+Ne pas forcer le push ; si un historique distant existe, le comparer avant intégration.
 
 ## Éléments manquants et statut
 

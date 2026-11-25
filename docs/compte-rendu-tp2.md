@@ -74,9 +74,7 @@ La matrice complète et les statuts réels sont dans `docs/tests.md`. Les captur
 
 ![Dossier Dev](../captures/tp2/14-folder-dev.png)
 
-![Diagnostic historique RH : Forbidden, sans preuve de lecture autorisée](../captures/tp2/15-folder-rh.png)
-
-![Bob refusé sur RH](../captures/tp2/16a-bob-rh-denied.png)
+![Rôles d'organisation Grafana](../captures/tp2/10a-grafana-roles.png)
 
 ## 14. Mobilité Bob
 

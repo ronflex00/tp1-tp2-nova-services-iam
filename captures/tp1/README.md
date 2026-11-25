@@ -1,13 +1,10 @@
 # Captures TP1
 
-Déposer ici uniquement des captures vérifiées ne contenant aucun secret. Les captures TP1 attendues sont listées dans `docs/COMPTE_RENDU.md`.
+Captures Chromium des interfaces du laboratoire, prises le 25 novembre 2026 avant toute saisie.
 
-| Preuve | Fichier | Statut |
-|---|---|---|
-| Interface de connexion Authentik actuelle | 02-authentik-login.png | DONE |
-| Interface de connexion Grafana actuelle | 03-grafana-login.png | DONE |
-| Docker Compose / conteneurs | aucun PNG ; résultats dans la recette finale | MISSING image |
-| Administration Authentik | aucune | MISSING |
-| Persistance avant/après recréation | aucune paire historique | MISSING |
+| Fichier | Interface |
+|---|---|
+| [02-authentik-login.png](02-authentik-login.png) | Connexion Authentik |
+| [03-grafana-login.png](03-grafana-login.png) | Connexion Grafana et bouton SSO |
 
-Les deux PNG du 25 novembre 2026 sont des captures Chromium réelles, avant toute saisie. Ils montrent les interfaces publiques, sans prouver l'authentification ni la persistance.
+Ces images montrent le chargement des interfaces. Les contrôles de santé sont décrits dans le [compte rendu TP1](../../docs/COMPTE_RENDU.md).
