@@ -86,6 +86,12 @@ La [matrice TP2](docs/tests.md) détaille les observations de recette. Les conne
 
 [Inventaire TP1](captures/tp1/README.md) · [Inventaire TP2](captures/tp2/README.md)
 
+Les [captures retrouvées dans la conversation](captures/tp2/conversation/README.md) complètent le TP2. Ce sont des états historiques : elles ne remplacent pas la recette finale. Les vues de rôles et dashboards déjà présentes sont réutilisées pour éviter les doublons.
+
+Utilisateurs Authentik avant le départ de Bob ; noms d'utilisateur encore longs à cette étape :
+
+![Historique TP2 : utilisateurs Authentik actifs avant le départ de Bob](captures/tp2/conversation/01-users-authentik.png)
+
 Écran de connexion Grafana actuel :
 
 ![Connexion Grafana](captures/tp1/03-grafana-login.png)
@@ -101,6 +107,10 @@ Dashboard du dossier Dev :
 Rôles des utilisateurs Grafana :
 
 ![Rôles Grafana](captures/tp2/10a-grafana-roles.png)
+
+Bob Viewer à une étape historique du scénario de mobilité. Le groupe Audit et le refus d'édition ne sont pas visibles sur cette image ; le scénario complet reste partiellement documenté.
+
+![Historique TP2 : rôle Viewer de Bob synchronisé via Generic OAuth](captures/tp2/conversation/13-bob-viewer-apres-mobilite.png)
 
 ## Documentation
 

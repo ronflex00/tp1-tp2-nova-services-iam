@@ -17,3 +17,14 @@ playwright-report/
 test-results/
 node_modules/
 
+# Seules les captures de conversation inspectées sont retenues.
+captures/tp2/conversation/*
+!captures/tp2/conversation/README.md
+!captures/tp2/conversation/01-users-authentik.png
+!captures/tp2/conversation/02-attributs-charlie.png
+!captures/tp2/conversation/03-groupes-crees.png
+!captures/tp2/conversation/04-appartenances-historique.png
+!captures/tp2/conversation/05-mfa-akadmin-totp.png
+!captures/tp2/conversation/13-bob-viewer-apres-mobilite.png
+!captures/tp2/conversation/14-dossier-dev-bob.png
+

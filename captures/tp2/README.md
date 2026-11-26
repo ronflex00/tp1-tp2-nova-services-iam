@@ -11,3 +11,5 @@ Sélection des interfaces et tableaux de bord du laboratoire.
 | [14-folder-dev.png](14-folder-dev.png) | Dashboard du dossier Dev |
 
 Les vues utilisateurs et rôles du 25 novembre 2026 ont été consultées avec le compte local admin. Les dashboards proviennent de la recette précédente. La [documentation des tests](../../docs/tests.md) précise la portée des vérifications.
+
+Sept [preuves historiques de conversation](conversation/README.md) complètent ces vues : utilisateurs, attributs Charlie, groupes à deux étapes, TOTP administratif, rôle Viewer historique de Bob et comparaison des dossiers admin/Bob. L'inventaire précise la sélection et les images écartées.
