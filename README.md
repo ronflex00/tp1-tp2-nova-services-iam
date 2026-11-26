@@ -1,140 +1,116 @@
-# Nova Services — IAM Lab
+# Nova Services — Laboratoire IAM
 
-Laboratoire scolaire de gestion des identités : construire un socle Docker persistant, fédérer la connexion avec Authentik, puis vérifier les habilitations Grafana. Gitea a volontairement été écarté.
+**Gestion des identités et des habilitations · TP1 & TP2**
 
-Ce dépôt rassemble l'infrastructure Docker, les procédures TP1/TP2, les scripts de vérification et les captures des interfaces du laboratoire.
+Déploiement d'une infrastructure IAM locale avec **Authentik**, **PostgreSQL** et **Grafana**, puis mise en œuvre de l'authentification fédérée **OpenID Connect**, du MFA et du contrôle d'accès par rôles (RBAC).
 
-## TP1 — Infrastructure IAM
+Ce dépôt réunit les configurations, les procédures, les scripts de vérification et les comptes rendus d'un laboratoire pédagogique. **Il ne constitue pas une configuration de production.**
 
-PostgreSQL, Authentik Server/Worker et Grafana partagent un réseau Docker. Des healthchecks contrôlent le démarrage et des volumes conservent les données.
+## Périmètre du projet
 
-[Compte rendu TP1](docs/COMPTE_RENDU.md) · [Réponses TP1](docs/REPONSES_TP.md) · [Persistance](docs/PERSISTENCE.md)
+| TP | Objectif | Livrables |
+| --- | --- | --- |
+| **TP1 — Infrastructure** | Déployer Authentik, PostgreSQL et Grafana avec Docker Compose ; vérifier la santé des services et la persistance des données. | [Compte rendu](docs/COMPTE_RENDU.md) · [Tests](docs/TESTS.md) · [Persistance](docs/PERSISTENCE.md) |
+| **TP2 — Identités et habilitations** | Configurer les identités, groupes, MFA TOTP, SSO OIDC, rôles Grafana, permissions de dossiers et cycle de vie des comptes. | [Compte rendu](docs/compte-rendu-tp2.md) · [Matrice des tests](docs/tests.md) · [RBAC](docs/rbac.md) |
 
-## TP2 — Gouvernance des identités et habilitations
-
-Identités et attributs métier, groupes Admin/Dev/RH/Audit, MFA TOTP, récupération, SSO OIDC, mapping des rôles, équipes et permissions de dossiers. Le départ de Bob a été appliqué dans Authentik.
-
-[Compte rendu TP2](docs/compte-rendu-tp2.md) · [Réponses TP2](docs/questions-tp2.md) · [Matrice des tests](docs/tests.md)
-
-## Technologies
-
-| Composant | Version configurée | Exposition hôte |
-|---|---|---|
-| PostgreSQL | 16-alpine | aucune |
-| Authentik Server | 2026.8.6 | 9000 |
-| Authentik Worker | 2026.8.6 | aucune |
-| Grafana | 13.3.1 | 3000 |
-| Docker Compose | v2 requis | réseau iam-network |
-| Playwright | 1.65.1 dans le lockfile | Chromium uniquement |
+**Périmètre retenu :** Gitea, proposé dans le sujet initial du TP1, n'a pas été déployé.
 
 ## Architecture
 
 ```mermaid
 flowchart LR
-    B["Navigateur"] -->|"HTTP 3000"| G["Grafana"]
-    B -->|"Login et MFA / HTTP 9000"| A["Authentik Server"]
-    G -->|"Code OIDC, token et UserInfo"| A
-    A --> P[("PostgreSQL interne")]
-    W["Authentik Worker"] --> P
-    G --> V[("Volume grafana_data")]
-    P --> D[("Volume postgres_data")]
-    A --> F["Données Authentik partagées"]
-    W --> F
+    U["Utilisateur / navigateur"] -->|"Accès applicatif"| G["Grafana · :3000"]
+    G <-->|"SSO OpenID Connect"| A["Authentik Server · :9000"]
+    U -->|"Connexion et MFA"| A
+    A <--> W["Authentik Worker"]
+    A --> P[("PostgreSQL · réseau Docker privé")]
+    W --> P
+    G --> V[("Données persistantes Grafana")]
+    P --> D[("Données persistantes PostgreSQL")]
 ```
 
-## Installation
+| Technologie | Version du laboratoire | Fonction |
+| --- | --- | --- |
+| Docker Compose | v2 | Orchestration des services |
+| PostgreSQL | 16-alpine | Stockage interne d'Authentik |
+| Authentik Server / Worker | 2026.8.6 | Identités, MFA et fournisseur OIDC |
+| Grafana | 13.3.1 | Application cliente, rôles et dashboards |
+| Playwright / Chromium | Selon le lockfile | Captures et scénarios de vérification |
 
-Prévoir Docker Compose v2 et Python 3.9+. Node 20+ est nécessaire seulement pour les captures Playwright.
+La communication OIDC distingue l'adresse utilisée par le navigateur (`localhost:9000`) de celle accessible aux conteneurs (`authentik-server:9000`). Voir [la documentation OIDC](docs/oidc.md).
 
-Le laboratoire existant est déjà initialisé. Pour le reprendre :
+## Fonctionnalités étudiées
+
+- **Provisioning et cycle de vie :** création de comptes, attributs métier, groupes, mobilité et départ.
+- **MFA :** dispositifs TOTP et récupération par codes statiques.
+- **SSO :** connexion à Grafana par Authentik via OIDC.
+- **RBAC :** correspondance des groupes Authentik avec les rôles Grafana.
+- **Contrôle d'accès :** droits de consultation, d'édition et permissions des dossiers Dev/RH.
+- **Traçabilité :** résultats techniques et fonctionnels documentés, avec distinction entre tests validés, partiels et non exécutés.
+
+### Modèle de rôles
+
+| Groupe Authentik | Rôle Grafana attendu |
+| --- | --- |
+| Admin | Admin d'organisation |
+| Dev | Editor |
+| RH | Viewer |
+| Audit | Viewer |
+
+Il s'agit du **modèle d'habilitation étudié**, non d'une liste des appartenances actuelles. L'état effectivement mesuré figure dans [la recette finale](docs/RECETTE_FINALE.md).
+
+## Exécution locale
+
+**Prérequis :** Docker avec Compose v2, Python 3.9+ ; Node.js 20+ uniquement pour les scripts Playwright.
 
 ```bash
+# Depuis la racine du dépôt, sur un laboratoire déjà configuré
 docker compose up -d --wait --wait-timeout 600
 ./scripts/verify.sh
 ./scripts/verify_oidc.sh
-```
-
-Pour une installation vierge, suivre [INSTALLATION.md](docs/INSTALLATION.md). Le Compose final exige aussi un Client ID et un Client Secret OIDC : le script de génération des secrets TP1 ne suffit pas, à lui seul, à recréer toute la configuration TP2.
-
-## Configuration sécurisée
-
-[.env.example](.env.example) décrit les variables ; les valeurs réelles restent dans un fichier local .env de mode 0600. La modification du mot de passe dans ce fichier ne réinitialise pas un compte Grafana existant.
-
-Grafana utilise localhost:9000 dans le navigateur et authentik-server:9000 pour le back channel. Le [document OIDC](docs/oidc.md) détaille le flux et la claim nova_groups.
-
-## Tests automatisés
-
-```bash
-docker compose config --quiet
-./scripts/verify.sh
-./scripts/verify_oidc.sh
 curl -fsS http://localhost:3000/api/health
-npm ci
-npx playwright install chromium
-node scripts/capture_release.mjs
 ```
 
-Le script de captures consulte les écrans courants et la liste des utilisateurs Grafana avec le compte local existant. Il ne modifie pas les habilitations. Les sessions restent en mémoire et le navigateur est fermé à la fin.
+**Première installation :** suivre le [guide d'installation](docs/INSTALLATION.md). Le modèle [.env.example](.env.example) ne contient pas les secrets réels : la configuration du fournisseur OIDC et les identifiants correspondants doivent être préparés séparément.
 
-La suite tests/e2e/tp2-rbac.spec.ts conserve les scénarios pédagogiques de connexion et de cycle de vie. Son exécution complète suppose un environnement de test avec Bob actif ; le laboratoire livré conserve son état après départ.
+Pour les vérifications navigateur, voir les scripts dans `scripts/` et la documentation des tests. Ne pas réinitialiser les volumes ni réactiver des comptes désactivés pour rejouer des scénarios historiques sans environnement de test distinct.
 
-## Tests fonctionnels
+## État de validation
 
-La [matrice TP2](docs/tests.md) détaille les observations de recette. Les connexions MFA font intervenir l'utilisateur dans Chromium ; les facteurs restent personnels.
+| Domaine | Synthèse |
+| --- | --- |
+| Déploiement Docker et santé des services | **Validé** |
+| Configuration OIDC et découverte du fournisseur | **Validé techniquement** |
+| Synchronisation des rôles Alice / Bob / Charlie | **Validée pour les rôles observés** |
+| Gestion des comptes et départ de Bob | **Partielle** : Authentik désactivé ; désactivation du profil Grafana non aboutie |
+| Isolation des dossiers et scénarios d'édition | **À compléter** : preuves incomplètes et anomalie Alice → Dev consignée |
+| MFA négatif, récupération et sessions après départ | **Non entièrement testés** |
 
-## Captures et preuves
+Les détails, preuves et réserves sont conservés dans la [matrice TP2](docs/tests.md) et la [recette finale](docs/RECETTE_FINALE.md). Le README ne remplace pas les résultats d'exécution.
 
-[Inventaire TP1](captures/tp1/README.md) · [Inventaire TP2](captures/tp2/README.md)
+## Documentation et preuves
 
-Les [captures retrouvées dans la conversation](captures/tp2/conversation/README.md) complètent le TP2. Ce sont des états historiques : elles ne remplacent pas la recette finale. Les vues de rôles et dashboards déjà présentes sont réutilisées pour éviter les doublons.
+| Ressource | Contenu |
+| --- | --- |
+| [Dossier TP1](captures/tp1/README.md) | Captures d'accès Authentik et Grafana |
+| [Dossier TP2](captures/tp2/README.md) | Captures IAM, SSO, rôles et dashboards |
+| [Compte rendu TP1](docs/COMPTE_RENDU.md) | Installation, architecture et vérifications |
+| [Compte rendu TP2](docs/compte-rendu-tp2.md) | Identités, MFA, OIDC, RBAC et cycle de vie |
+| [Matrice des tests TP2](docs/tests.md) | Attendus, observations, statuts et limites |
+| [Architecture](docs/ARCHITECTURE.md) | Organisation technique du laboratoire |
+| [Gestion des identités](docs/comptes.md) | Comptes et attributs métier |
+| [MFA et récupération](docs/recovery.md) | Dispositifs et procédures |
+| [Réponses TP1](docs/REPONSES_TP.md) · [Réponses TP2](docs/questions-tp2.md) | Questions pédagogiques |
 
-Utilisateurs Authentik avant le départ de Bob ; noms d'utilisateur encore longs à cette étape :
+Les galeries de preuves sont volontairement **séparées de cette page d'accueil** afin de conserver un README lisible.
 
-![Historique TP2 : utilisateurs Authentik actifs avant le départ de Bob](captures/tp2/conversation/01-users-authentik.png)
+## Sécurité et limites
 
-Écran de connexion Grafana actuel :
+- Les secrets applicatifs, mots de passe, tokens, cookies et données de sessions ne doivent pas être versionnés ; le fichier `.env` réel reste local.
+- Les captures sont sélectionnées pour éviter l'exposition d'informations sensibles et ne sont pas utilisées comme preuve d'une action qu'elles ne montrent pas.
+- Le laboratoire utilise **HTTP** et expose les ports **3000** et **9000** sur l'hôte : ce paramétrage est adapté à l'exercice local, **pas à une mise en production**.
+- Certaines validations TP2 nécessitent une intervention humaine ou un environnement de test réinitialisable. Les limites et échecs constatés restent documentés.
 
-![Connexion Grafana](captures/tp1/03-grafana-login.png)
+---
 
-Dashboard Nova Services :
-
-![Dashboard Nova Services](captures/tp2/11-dashboard.png)
-
-Dashboard du dossier Dev :
-
-![Dashboard Dev](captures/tp2/14-folder-dev.png)
-
-Rôles des utilisateurs Grafana :
-
-![Rôles Grafana](captures/tp2/10a-grafana-roles.png)
-
-Bob Viewer à une étape historique du scénario de mobilité. Le groupe Audit et le refus d'édition ne sont pas visibles sur cette image ; le scénario complet reste partiellement documenté.
-
-![Historique TP2 : rôle Viewer de Bob synchronisé via Generic OAuth](captures/tp2/conversation/13-bob-viewer-apres-mobilite.png)
-
-## Documentation
-
-- [Architecture](docs/ARCHITECTURE.md), [installation](docs/INSTALLATION.md), [tests TP1](docs/TESTS.md).
-- [Comptes](docs/comptes.md), [RBAC](docs/rbac.md), [MFA et récupération](docs/recovery.md).
-- [OIDC](docs/oidc.md), [réponses TP2](docs/questions-tp2.md).
-
-## Sécurité
-
-Aucun volume n'a été supprimé et Bob n'a pas été réactivé pour le rendu. Les secrets, bases de données, cookies, traces et états Playwright sont exclus de Git. Les captures ont été inspectées ; les valeurs locales et les motifs de secrets ont aussi été recherchés dans l'historique.
-
-Les ports 9000 et 3000 sont publiés sur toutes les interfaces de l'hôte et le laboratoire utilise HTTP. Ce rendu décrit un environnement pédagogique, pas un déploiement de production.
-
-## Résultats
-
-| Contrôle | Statut |
-|---|---|
-| Compose, quatre services, santé PostgreSQL/Authentik/Grafana | PASS |
-| Découverte OIDC et configuration PKCE | PASS |
-| Rôles Grafana Alice Viewer, Bob Editor, Charlie Admin | PASS API |
-| Bob inactif Authentik, sans groupe, absent de nova-dev | PASS état courant |
-
-## Conclusion
-
-Le laboratoire illustre la mise en place d'un socle IAM et l'intégration OIDC d'une application cliente. Les comptes rendus décrivent les manipulations et les captures présentent les interfaces obtenues.
-
-Dépôt : [ronflex00/tp1-tp2-nova-services-iam](https://github.com/ronflex00/tp1-tp2-nova-services-iam).
+*Projet pédagogique Nova Services — module Gouvernance des identités et des habilitations.*
